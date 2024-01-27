@@ -30,6 +30,24 @@ public class Scanner {
 		// TODO: Determine what the token is. For example, if it is a number
 		//  keep calling takeIt() until _currentChar is not a number. Then
 		//  create the token via makeToken(TokenType.IntegerLiteral) and return it.
+
+		// skip white space
+		while (_currentChar == ' ') {
+			skipIt();
+		}
+		// check for comments
+		if (_currentChar == '/') {
+			takeIt(); // add '/' to current text
+			if (_currentChar == '/') {
+				while(_currentChar != '\n') {
+					skipIt();
+				}
+				return scan(); // return next token after comment
+			} else if (_currentChar == '*') {
+				skipIt();
+				// TODO: Skip it until we reach the next '*/' combo
+			}
+		}
 		return null;
 	}
 	
@@ -45,6 +63,10 @@ public class Scanner {
 	private void nextChar() {
 		try {
 			int c = _in.read();
+
+//			if (c == -1) {
+//				makeToken(TokenType.EOT);
+//			}
 			_currentChar = (char)c;
 			
 			// TODO: What happens if c == -1?
@@ -53,12 +75,14 @@ public class Scanner {
 			
 		} catch( IOException e ) {
 			// TODO: Report an error here
+			_errors.reportError("Unrecognized ASCII character, cannot scan");
+
 		}
 	}
 	
 	private Token makeToken( TokenType toktype ) {
 		// TODO: return a new Token with the appropriate type and text
-		//  contained in 
-		return null;
+		//  contained in
+		return new Token(toktype, _currentText.toString());
 	}
 }
