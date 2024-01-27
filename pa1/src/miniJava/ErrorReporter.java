@@ -16,7 +16,7 @@ public class ErrorReporter {
 	
 	public boolean hasErrors() {
 		// TODO: Check if errorQueue is non-empty
-		return false;
+		return _errorQueue.isEmpty();
 	}
 	
 	public void outputErrors() {
