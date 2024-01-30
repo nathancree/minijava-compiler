@@ -42,6 +42,9 @@ public class Scanner {
         || _currentChar == '\n'
         || _currentChar == '\t'
         || _currentChar == '\r') {
+      if (_endOfFileReached) {
+        return makeToken(TokenType.EOT);
+      }
       skipIt();
     }
     // check for comments
@@ -137,6 +140,9 @@ public class Scanner {
         && _currentChar != '+'
         && _currentChar != '-'
         && _currentChar != '*') {
+      if (_endOfFileReached) {
+        return makeToken(TokenType.EOT);
+      }
       takeIt();
     }
 

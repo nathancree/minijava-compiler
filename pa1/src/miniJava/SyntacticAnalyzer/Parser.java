@@ -255,7 +255,7 @@ public class Parser {
 
     // TODO: Report an error here.
     //  "Expected token X, but got Y"
-    _errors.reportError("Expected " + expectedType + ", but got " + _currentToken);
+    _errors.reportError("Expected " + expectedType + ", but got " + _currentToken.getTokenText());
     throw new SyntaxError();
   }
 
