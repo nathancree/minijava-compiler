@@ -128,7 +128,7 @@ public class Parser {
   }
 
   private void parseStatement() throws SyntaxError {
-    
+
   }
 
   private void parseExpression() throws SyntaxError {}
