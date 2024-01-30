@@ -40,8 +40,21 @@ public class Parser {
     // TODO: Take in a {
     accept(TokenType.LCURLY);
     // TODO: Parse either a FieldDeclaration or MethodDeclaration
-    parseVisibility();
-    parseAccess();
+    while (_currentToken.getTokenType() != TokenType.RCURLY){
+      parseVisibility();
+      parseAccess();
+      if (_currentToken.getTokenType() == TokenType.VOID) {
+        parseMethodDeclaration();
+      } else {
+        parseType();
+        accept(TokenType.IDENTIFIER);
+        if (_currentToken.getTokenType() == TokenType.SEMICOLON) {
+          accept(TokenType.SEMICOLON);
+        } else {
+          parseMethodDeclaration();
+        }
+      }
+    }
     // TODO: Take in a }
     accept(TokenType.RCURLY);
   }
@@ -55,8 +68,7 @@ public class Parser {
   private void parseMethodDeclaration() throws SyntaxError {
     if (_currentToken.getTokenType() == TokenType.VOID) {
       accept(TokenType.VOID);
-    } else {
-      parseType();
+      accept(TokenType.IDENTIFIER);
     }
     accept(TokenType.LPAREN);
     if (_currentToken.getTokenType() != TokenType.RPAREN) {
