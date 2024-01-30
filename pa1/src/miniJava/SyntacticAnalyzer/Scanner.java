@@ -196,7 +196,7 @@ public class Scanner {
   private Token commentScan() {
     if (_currentChar == '/') {
       skipIt();
-      while (_currentChar != '\n' && !_endOfFileReached) {
+      while (_currentChar != '\n' && _currentChar != '\r' && !_endOfFileReached) {
         skipIt();
       }
       return scan(); // return next token after comment

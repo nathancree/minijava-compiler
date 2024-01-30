@@ -128,10 +128,122 @@ public class Parser {
   }
 
   private void parseStatement() throws SyntaxError {
-
+    if (_currentToken.getTokenType() == TokenType.LCURLY) {
+      accept(TokenType.LCURLY);
+      while (_currentToken.getTokenType() != TokenType.RCURLY) {
+        parseStatement();
+      }
+      accept(TokenType.RCURLY);
+    } else if (_currentToken.getTokenType() == TokenType.INT
+        || _currentToken.getTokenType() == TokenType.BOOLEAN) {
+      parseType();
+      accept(TokenType.IDENTIFIER);
+      accept(TokenType.EQUALS);
+      parseExpression();
+      accept(TokenType.SEMICOLON);
+    } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER) { // could be Reference or Type
+      accept(TokenType.IDENTIFIER);
+      if (_currentToken.getTokenType() != TokenType.PERIOD) { // accepts Type ID[]
+        accept(TokenType.LBRACK);
+        accept(TokenType.RBRACK);
+        accept(TokenType.IDENTIFIER);
+        accept(TokenType.EQUALS);
+        parseExpression();
+        accept(TokenType.SEMICOLON);
+      } else {
+        parseReference();
+        if (_currentToken.getTokenType() == TokenType.EQUALS) {
+          accept(TokenType.EQUALS);
+          parseExpression();
+          accept(TokenType.SEMICOLON);
+        } else if (_currentToken.getTokenType() == TokenType.LBRACK) {
+          accept(TokenType.LBRACK);
+          parseExpression();
+          accept(TokenType.RBRACK);
+          accept(TokenType.EQUALS);
+          parseExpression();
+          accept(TokenType.SEMICOLON);
+        } else {
+          accept(TokenType.LPAREN);
+          if (_currentToken.getTokenType() != TokenType.RPAREN) {
+            parseArgumentList();
+          }
+          accept(TokenType.RPAREN);
+          accept(TokenType.SEMICOLON);
+        }
+      }
+    } else if (_currentToken.getTokenType() == TokenType.RETURN) {
+      accept(TokenType.RETURN);
+      if (_currentToken.getTokenType() != TokenType.SEMICOLON) {
+        parseExpression();
+      }
+      accept(TokenType.SEMICOLON);
+    } else if (_currentToken.getTokenType() == TokenType.IF) {
+      accept(TokenType.IF);
+      accept(TokenType.LPAREN);
+      parseExpression();
+      accept(TokenType.RPAREN);
+      parseStatement();
+      if (_currentToken.getTokenType() == TokenType.ELSE) {
+        accept(TokenType.ELSE);
+        parseStatement();
+      }
+    } else if (_currentToken.getTokenType() == TokenType.WHILE) {
+      accept(TokenType.WHILE);
+      accept(TokenType.LPAREN);
+      parseExpression();
+      accept(TokenType.RPAREN);
+      parseStatement();
+    }
   }
 
-  private void parseExpression() throws SyntaxError {}
+  private void parseExpression() throws SyntaxError {
+    if (_currentToken.getTokenType() == TokenType.IDENTIFIER || _currentToken.getTokenType() == TokenType.THIS) {
+      parseReference();
+      if (_currentToken.getTokenType() == TokenType.LBRACK) {
+        accept(TokenType.LBRACK);
+        parseExpression();
+        accept(TokenType.RBRACK);
+      } else if (_currentToken.getTokenType() == TokenType.LPAREN) {
+        accept(TokenType.LPAREN);
+        if (_currentToken.getTokenType() != TokenType.RPAREN) {
+          parseArgumentList();
+        }
+        accept(TokenType.RPAREN);
+      }
+    } else if (_currentToken.getTokenText().equals("!") || _currentToken.getTokenText().equals("-")) { //warning
+      _currentToken = _scanner.scan();
+      parseExpression();
+    } else if (_currentToken.getTokenType() == TokenType.LPAREN) {
+      accept(TokenType.LPAREN);
+      parseExpression();
+      accept(TokenType.RPAREN);
+    } else if (_currentToken.getTokenType() == TokenType.INTLITERAL || _currentToken.getTokenType() == TokenType.BOOLEANLITERAL) {
+      _currentToken = _scanner.scan();
+    } else if (_currentToken.getTokenType() == TokenType.NEW) {
+      accept(TokenType.NEW);
+      if (_currentToken.getTokenType() == TokenType.INT) {
+        accept(TokenType.INT);
+        accept(TokenType.LBRACK);
+        parseExpression();
+        accept(TokenType.RBRACK);
+      } else {
+        accept(TokenType.IDENTIFIER);
+        if (_currentToken.getTokenType() == TokenType.LPAREN) {
+          accept(TokenType.LPAREN);
+          accept(TokenType.RPAREN);
+        } else {
+          accept(TokenType.LBRACK);
+          parseExpression();
+          accept(TokenType.RBRACK);
+        }
+      }
+    } else {
+      parseExpression();
+      accept(TokenType.OPERATOR);
+      parseExpression();
+    }
+  }
 
   // This method will accept the token and retrieve the next token.
   //  Can be useful if you want to error check and accept all-in-one.
