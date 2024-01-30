@@ -10,6 +10,7 @@ public class Scanner {
   private final StringBuilder _currentText;
   private char _currentChar;
   private boolean _endOfFileReached;
+
   public Scanner(InputStream in, ErrorReporter errors) {
     this._in = in;
     this._errors = errors;
@@ -34,10 +35,13 @@ public class Scanner {
 
     _currentText.setLength(0); // reset _currentText string
     if (_endOfFileReached) {
-      return  makeToken(TokenType.EOT);
+      return makeToken(TokenType.EOT);
     }
     // skip white space
-    while (_currentChar == ' ' || _currentChar == '\n') {
+    while (_currentChar == ' '
+        || _currentChar == '\n'
+        || _currentChar == '\t'
+        || _currentChar == '\r') {
       skipIt();
     }
     // check for comments
@@ -54,9 +58,7 @@ public class Scanner {
         return makeToken(TokenType.OPERATOR);
       }
       return makeToken(TokenType.EQUALS);
-    } else if (_currentChar == '>'
-        || _currentChar == '<'
-        || _currentChar == '!') {
+    } else if (_currentChar == '>' || _currentChar == '<' || _currentChar == '!') {
       takeIt();
       if (_currentChar == '=') {
         takeIt();
@@ -84,15 +86,27 @@ public class Scanner {
     } else if (_currentChar == '}') {
       takeIt();
       return makeToken(TokenType.RCURLY);
+    } else if (_currentChar == '[') {
+      takeIt();
+      return makeToken(TokenType.LBRACK);
+    } else if (_currentChar == ']') {
+      takeIt();
+      return makeToken(TokenType.RBRACK);
     } else if (_currentChar == '(') {
       takeIt();
       return makeToken(TokenType.LPAREN);
     } else if (_currentChar == ')') {
       takeIt();
       return makeToken(TokenType.RPAREN);
+    } else if (_currentChar == ',') {
+      takeIt();
+      return makeToken(TokenType.COMMA);
     } else if (_currentChar == ';') {
       takeIt();
       return makeToken(TokenType.SEMICOLON);
+    } else if (_currentChar == '.') {
+      takeIt();
+      return makeToken(TokenType.PERIOD);
     } else if (_currentChar == '+' || _currentChar == '-' || _currentChar == '*') {
       takeIt();
       return makeToken(TokenType.OPERATOR);
@@ -104,10 +118,16 @@ public class Scanner {
         && _currentChar != '}'
         && _currentChar != '('
         && _currentChar != ')'
+        && _currentChar != '['
+        && _currentChar != ']'
+        && _currentChar != ','
         && _currentChar != ';'
+        && _currentChar != '.'
         && _currentChar != '='
         && _currentChar != ' '
         && _currentChar != '\n'
+        && _currentChar != '\t'
+        && _currentChar != '\r'
         && _currentChar != '/'
         && _currentChar != '>'
         && _currentChar != '<'
@@ -131,6 +151,8 @@ public class Scanner {
         return makeToken(TokenType.STATIC);
       case "void":
         return makeToken(TokenType.VOID);
+      case "int":
+        return makeToken(TokenType.INT);
       case "boolean":
         return makeToken(TokenType.BOOLEAN);
       case "if":
@@ -145,6 +167,8 @@ public class Scanner {
         return makeToken(TokenType.THIS);
       case "null":
         return makeToken(TokenType.NULL);
+      case "new":
+        return makeToken(TokenType.NEW);
       case "true":
       case "false":
         return makeToken(TokenType.BOOLEANLITERAL);
@@ -152,13 +176,19 @@ public class Scanner {
         if (Character.isDigit(_currentText.charAt(0))) {
           for (int i = 1; i < _currentText.length(); i++) {
             if (!Character.isDigit(_currentText.charAt(0))) {
-              _errors.reportError("Cannot convert input: \"" + _currentText.toString() + "\" to a token");
+              _errors.reportError(
+                  "Cannot convert input: \"" + _currentText.toString() + "\" to a token");
               return scan();
             }
           }
           return makeToken(TokenType.INTLITERAL);
         } else {
-          return makeToken(TokenType.IDENTIFIER);
+          if (_currentText.charAt(0) != '_') {
+            return makeToken(TokenType.IDENTIFIER);
+          }
+          _errors.reportError(
+              "Cannot convert input: \"" + _currentText.toString() + "\" to a token");
+          return scan();
         }
     }
   }
@@ -166,7 +196,7 @@ public class Scanner {
   private Token commentScan() {
     if (_currentChar == '/') {
       skipIt();
-      while (_currentChar != '\n') {
+      while (_currentChar != '\n' && !_endOfFileReached) {
         skipIt();
       }
       return scan(); // return next token after comment
