@@ -235,6 +235,10 @@ public class Parser {
       accept(TokenType.RPAREN);
     } else if (_currentToken.getTokenType() == TokenType.INTLITERAL || _currentToken.getTokenType() == TokenType.BOOLEANLITERAL) {
       _currentToken = _scanner.scan();
+      if (_currentToken.getTokenType() == TokenType.OPERATOR) {
+        accept(TokenType.OPERATOR);
+        parseExpression();
+      }
     } else if (_currentToken.getTokenType() == TokenType.NEW) {
       accept(TokenType.NEW);
       if (_currentToken.getTokenType() == TokenType.INT) {
