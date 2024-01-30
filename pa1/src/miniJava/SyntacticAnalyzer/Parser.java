@@ -258,7 +258,10 @@ public class Parser {
         }
       }
     } else {
-      parseExpression();
+      _errors.reportError("Expected an Expression, but got \"" + _currentToken.getTokenText() + "\"");
+      throw new SyntaxError();
+    }
+    if(_currentToken.getTokenType() == TokenType.OPERATOR) {
       accept(TokenType.OPERATOR);
       parseExpression();
     }
