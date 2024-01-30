@@ -206,6 +206,9 @@ public class Parser {
       parseExpression();
       accept(TokenType.RPAREN);
       parseStatement();
+    } else {
+      _errors.reportError("Expected a Statement, but got \"" + _currentToken.getTokenText() + "\"");
+      throw new SyntaxError();
     }
   }
 
@@ -267,7 +270,7 @@ public class Parser {
 
     // TODO: Report an error here.
     //  "Expected token X, but got Y"
-    _errors.reportError("Expected " + expectedType + ", but got " + _currentToken.getTokenText());
+    _errors.reportError("Expected " + expectedType + ", but got \"" + _currentToken.getTokenText() + "\"");
     throw new SyntaxError();
   }
 

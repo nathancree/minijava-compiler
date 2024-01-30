@@ -215,6 +215,8 @@ public class Scanner {
             skipIt();
             return scan();
           }
+        } else {
+          skipIt();
         }
       }
     }
