@@ -144,7 +144,7 @@ public class Parser {
     }
   }
 
-  private void parseStatement() throws SyntaxError {
+  private void parseStatement1() throws SyntaxError {
     if (_currentToken.getTokenType() == TokenType.LCURLY) {
       accept(TokenType.LCURLY);
       while (_currentToken.getTokenType() != TokenType.RCURLY) {
@@ -164,6 +164,88 @@ public class Parser {
         accept(TokenType.LBRACK);
         accept(TokenType.RBRACK);
         accept(TokenType.IDENTIFIER);
+        accept(TokenType.EQUALS);
+        parseExpression();
+        accept(TokenType.SEMICOLON);
+      } else if (_currentToken.getTokenType() == TokenType.EQUALS) {
+        accept(TokenType.EQUALS);
+        parseExpression();
+        accept(TokenType.SEMICOLON);
+      } else {
+        parseReference();
+        if (_currentToken.getTokenType() == TokenType.EQUALS) {
+          accept(TokenType.EQUALS);
+          parseExpression();
+          accept(TokenType.SEMICOLON);
+        } else if (_currentToken.getTokenType() == TokenType.LBRACK) {
+          accept(TokenType.LBRACK);
+          parseExpression();
+          accept(TokenType.RBRACK);
+          accept(TokenType.EQUALS);
+          parseExpression();
+          accept(TokenType.SEMICOLON);
+        } else {
+          accept(TokenType.LPAREN);
+          if (_currentToken.getTokenType() != TokenType.RPAREN) {
+            parseArgumentList();
+          }
+          accept(TokenType.RPAREN);
+          accept(TokenType.SEMICOLON);
+        }
+      }
+    } else if (_currentToken.getTokenType() == TokenType.RETURN) {
+      accept(TokenType.RETURN);
+      if (_currentToken.getTokenType() != TokenType.SEMICOLON) {
+        parseExpression();
+      }
+      accept(TokenType.SEMICOLON);
+    } else if (_currentToken.getTokenType() == TokenType.IF) {
+      accept(TokenType.IF);
+      accept(TokenType.LPAREN);
+      parseExpression();
+      accept(TokenType.RPAREN);
+      parseStatement();
+      if (_currentToken.getTokenType() == TokenType.ELSE) {
+        accept(TokenType.ELSE);
+        parseStatement();
+      }
+    } else if (_currentToken.getTokenType() == TokenType.WHILE) {
+      accept(TokenType.WHILE);
+      accept(TokenType.LPAREN);
+      parseExpression();
+      accept(TokenType.RPAREN);
+      parseStatement();
+    } else {
+      _errors.reportError("Expected a Statement, but got \"" + _currentToken.getTokenText() + "\"");
+      throw new SyntaxError();
+    }
+  }
+
+  private void parseStatement() throws SyntaxError {
+    if (_currentToken.getTokenType() == TokenType.LCURLY) {
+      accept(TokenType.LCURLY);
+      while (_currentToken.getTokenType() != TokenType.RCURLY) {
+        parseStatement();
+      }
+      accept(TokenType.RCURLY);
+    } else if (_currentToken.getTokenType() == TokenType.INT
+            || _currentToken.getTokenType() == TokenType.BOOLEAN) {
+      parseType();
+      accept(TokenType.IDENTIFIER);
+      accept(TokenType.EQUALS);
+      parseExpression();
+      accept(TokenType.SEMICOLON);
+    } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER) { // could be Reference or Type
+      accept(TokenType.IDENTIFIER);
+      if (_currentToken.getTokenType() == TokenType.LBRACK) { // accepts Type ID[]
+        accept(TokenType.LBRACK);
+        if (_currentToken.getTokenType() != TokenType.RBRACK) {
+          parseExpression();
+          accept(TokenType.RBRACK);
+        } else {
+          accept(TokenType.RBRACK);
+          accept(TokenType.IDENTIFIER);
+        }
         accept(TokenType.EQUALS);
         parseExpression();
         accept(TokenType.SEMICOLON);
