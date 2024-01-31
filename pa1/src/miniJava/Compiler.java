@@ -18,7 +18,9 @@ public class Compiler {
     try {
       inputStream = new FileInputStream(args[0]);
     } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
+      //      throw new RuntimeException(e);
+      System.out.println("Error \nFile Not Found");
+      return;
     }
 
     // TODO: Instantiate the scanner with the input stream and error object

@@ -167,6 +167,10 @@ public class Parser {
         accept(TokenType.EQUALS);
         parseExpression();
         accept(TokenType.SEMICOLON);
+      } else if (_currentToken.getTokenType() == TokenType.EQUALS) {
+        accept(TokenType.EQUALS);
+        parseExpression();
+        accept(TokenType.SEMICOLON);
       } else {
         parseReference();
         if (_currentToken.getTokenType() == TokenType.EQUALS) {
