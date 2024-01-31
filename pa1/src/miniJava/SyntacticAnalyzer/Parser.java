@@ -104,13 +104,18 @@ public class Parser {
         accept(TokenType.LBRACK);
         accept(TokenType.RBRACK);
       }
+    } else {
+      accept(TokenType.IDENTIFIER);
+      if (_currentToken.getTokenType() == TokenType.LBRACK) {
+        accept(TokenType.LBRACK);
+        accept(TokenType.RBRACK);
+      }
     }
   }
 
   private void parseParameterList() throws SyntaxError {
     parseType();
     accept(TokenType.IDENTIFIER);
-    accept(TokenType.LPAREN);
 
     while (_currentToken.getTokenType() == TokenType.COMMA) {
       accept(TokenType.COMMA);
@@ -155,7 +160,7 @@ public class Parser {
       accept(TokenType.SEMICOLON);
     } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER) { // could be Reference or Type
       accept(TokenType.IDENTIFIER);
-      if (_currentToken.getTokenType() != TokenType.PERIOD) { // accepts Type ID[]
+      if (_currentToken.getTokenType() == TokenType.LBRACK) { // accepts Type ID[]
         accept(TokenType.LBRACK);
         accept(TokenType.RBRACK);
         accept(TokenType.IDENTIFIER);
