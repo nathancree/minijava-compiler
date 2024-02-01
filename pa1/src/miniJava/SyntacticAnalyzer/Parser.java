@@ -40,7 +40,7 @@ public class Parser {
     // TODO: Take in a {
     accept(TokenType.LCURLY);
     // TODO: Parse either a FieldDeclaration or MethodDeclaration
-    while (_currentToken.getTokenType() != TokenType.RCURLY){
+    while (_currentToken.getTokenType() != TokenType.RCURLY) {
       parseVisibility();
       parseAccess();
       if (_currentToken.getTokenType() == TokenType.VOID) {
@@ -152,7 +152,7 @@ public class Parser {
       }
       accept(TokenType.RCURLY);
     } else if (_currentToken.getTokenType() == TokenType.INT
-            || _currentToken.getTokenType() == TokenType.BOOLEAN) {
+        || _currentToken.getTokenType() == TokenType.BOOLEAN) {
       parseType();
       accept(TokenType.IDENTIFIER);
       accept(TokenType.EQUALS);
@@ -160,7 +160,12 @@ public class Parser {
       accept(TokenType.SEMICOLON);
     } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER) { // could be Reference or Type
       accept(TokenType.IDENTIFIER);
-      if (_currentToken.getTokenType() == TokenType.LBRACK) { // accepts Type ID[]
+      if (_currentToken.getTokenType() == TokenType.IDENTIFIER) {
+        accept(TokenType.IDENTIFIER);
+        accept(TokenType.EQUALS);
+        parseExpression();
+        accept(TokenType.SEMICOLON);
+      } else if (_currentToken.getTokenType() == TokenType.LBRACK) { // accepts Type ID[]
         accept(TokenType.LBRACK);
         if (_currentToken.getTokenType() != TokenType.RBRACK) {
           parseExpression();
@@ -176,7 +181,7 @@ public class Parser {
         accept(TokenType.EQUALS);
         parseExpression();
         accept(TokenType.SEMICOLON);
-      } else if (_currentToken.getTokenType() != TokenType.IDENTIFIER){
+      } else { // if (_currentToken.getTokenType() != TokenType.IDENTIFIER){
         parseReference();
         if (_currentToken.getTokenType() == TokenType.EQUALS) {
           accept(TokenType.EQUALS);
@@ -197,10 +202,12 @@ public class Parser {
           accept(TokenType.RPAREN);
           accept(TokenType.SEMICOLON);
         }
-      } else {
-        _errors.reportError("Expected a Statement, but got \"" + _currentToken.getTokenText() + "\"");
-        throw new SyntaxError();
       }
+      //       else {
+      //        _errors.reportError("Expected a Statement, but got \"" +
+      // _currentToken.getTokenText() + "\"");
+      //        throw new SyntaxError();
+      //      }
     } else if (_currentToken.getTokenType() == TokenType.RETURN) {
       accept(TokenType.RETURN);
       if (_currentToken.getTokenType() != TokenType.SEMICOLON) {
@@ -230,7 +237,8 @@ public class Parser {
   }
 
   private void parseExpression() throws SyntaxError {
-    if (_currentToken.getTokenType() == TokenType.IDENTIFIER || _currentToken.getTokenType() == TokenType.THIS) {
+    if (_currentToken.getTokenType() == TokenType.IDENTIFIER
+        || _currentToken.getTokenType() == TokenType.THIS) {
       parseReference();
       if (_currentToken.getTokenType() == TokenType.LBRACK) {
         accept(TokenType.LBRACK);
@@ -243,14 +251,16 @@ public class Parser {
         }
         accept(TokenType.RPAREN);
       }
-    } else if (_currentToken.getTokenText().equals("!") || _currentToken.getTokenText().equals("-")) { //warning
+    } else if (_currentToken.getTokenText().equals("!")
+        || _currentToken.getTokenText().equals("-")) { // warning
       _currentToken = _scanner.scan();
       parseExpression();
     } else if (_currentToken.getTokenType() == TokenType.LPAREN) {
       accept(TokenType.LPAREN);
       parseExpression();
       accept(TokenType.RPAREN);
-    } else if (_currentToken.getTokenType() == TokenType.INTLITERAL || _currentToken.getTokenType() == TokenType.BOOLEANLITERAL) {
+    } else if (_currentToken.getTokenType() == TokenType.INTLITERAL
+        || _currentToken.getTokenType() == TokenType.BOOLEANLITERAL) {
       _currentToken = _scanner.scan();
       if (_currentToken.getTokenType() == TokenType.OPERATOR) {
         accept(TokenType.OPERATOR);
@@ -275,10 +285,12 @@ public class Parser {
         }
       }
     } else {
-      _errors.reportError("Expected an Expression, but got \"" + _currentToken.getTokenText() + "\"");
+      _errors.reportError(
+          "Expected an Expression, but got \"" + _currentToken.getTokenText() + "\"");
       throw new SyntaxError();
     }
-    if(_currentToken.getTokenType() == TokenType.OPERATOR && !_currentToken.getTokenText().equals("!")) {
+    if (_currentToken.getTokenType() == TokenType.OPERATOR
+        && !_currentToken.getTokenText().equals("!")) {
       accept(TokenType.OPERATOR);
       parseExpression();
     }
@@ -294,7 +306,8 @@ public class Parser {
 
     // TODO: Report an error here.
     //  "Expected token X, but got Y"
-    _errors.reportError("Expected " + expectedType + ", but got \"" + _currentToken.getTokenText() + "\"");
+    _errors.reportError(
+        "Expected " + expectedType + ", but got \"" + _currentToken.getTokenText() + "\"");
     throw new SyntaxError();
   }
 
