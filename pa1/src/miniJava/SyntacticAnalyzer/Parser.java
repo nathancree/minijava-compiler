@@ -182,32 +182,39 @@ public class Parser {
         parseExpression();
         accept(TokenType.SEMICOLON);
       } else { // if (_currentToken.getTokenType() != TokenType.IDENTIFIER){
-        parseReference();
-        if (_currentToken.getTokenType() == TokenType.EQUALS) {
-          accept(TokenType.EQUALS);
-          parseExpression();
-          accept(TokenType.SEMICOLON);
-        } else if (_currentToken.getTokenType() == TokenType.LBRACK) {
-          accept(TokenType.LBRACK);
-          parseExpression();
-          accept(TokenType.RBRACK);
-          accept(TokenType.EQUALS);
-          parseExpression();
-          accept(TokenType.SEMICOLON);
-        } else {
+        if (_currentToken.getTokenType() == TokenType.LPAREN) {
           accept(TokenType.LPAREN);
           if (_currentToken.getTokenType() != TokenType.RPAREN) {
             parseArgumentList();
           }
           accept(TokenType.RPAREN);
           accept(TokenType.SEMICOLON);
+        } else {
+          if (_currentToken.getTokenType() == TokenType.PERIOD) {
+            accept(TokenType.PERIOD);
+          }
+          parseReference();
+          if (_currentToken.getTokenType() == TokenType.EQUALS) {
+            accept(TokenType.EQUALS);
+            parseExpression();
+            accept(TokenType.SEMICOLON);
+          } else if (_currentToken.getTokenType() == TokenType.LBRACK) {
+            accept(TokenType.LBRACK);
+            parseExpression();
+            accept(TokenType.RBRACK);
+            accept(TokenType.EQUALS);
+            parseExpression();
+            accept(TokenType.SEMICOLON);
+          } else {
+            accept(TokenType.LPAREN);
+            if (_currentToken.getTokenType() != TokenType.RPAREN) {
+              parseArgumentList();
+            }
+            accept(TokenType.RPAREN);
+            accept(TokenType.SEMICOLON);
+          }
         }
       }
-      //       else {
-      //        _errors.reportError("Expected a Statement, but got \"" +
-      // _currentToken.getTokenText() + "\"");
-      //        throw new SyntaxError();
-      //      }
     } else if (_currentToken.getTokenType() == TokenType.RETURN) {
       accept(TokenType.RETURN);
       if (_currentToken.getTokenType() != TokenType.SEMICOLON) {
