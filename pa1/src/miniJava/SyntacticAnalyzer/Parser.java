@@ -101,8 +101,9 @@ public class Parser {
     } else if (_currentToken.getTokenType() == TokenType.INT) {
       accept(TokenType.INT);
       if (_currentToken.getTokenType() == TokenType.LBRACK) {
-        accept(TokenType.LBRACK);
-        accept(TokenType.RBRACK);
+        accept(TokenType.BRACKETS);
+//        accept(TokenType.LBRACK);
+//        accept(TokenType.RBRACK);
       }
     } else {
       accept(TokenType.IDENTIFIER);
