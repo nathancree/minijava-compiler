@@ -168,6 +168,11 @@ public class Parser {
         accept(TokenType.EQUALS);
         parseExpression();
         accept(TokenType.SEMICOLON);
+      } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER) {
+        accept(TokenType.IDENTIFIER);
+        accept(TokenType.EQUALS);
+        parseExpression();
+        accept(TokenType.SEMICOLON);
       } else if (_currentToken.getTokenType() == TokenType.PERIOD) {
         accept(TokenType.PERIOD);
         parseReference();
