@@ -91,6 +91,9 @@ public class Scanner {
       return makeToken(TokenType.RCURLY);
     } else if (_currentChar == '[') {
       takeIt();
+      if(_currentChar == ']') {
+        return makeToken(TokenType.BRACKETS);
+      }
       return makeToken(TokenType.LBRACK);
     } else if (_currentChar == ']') {
       takeIt();

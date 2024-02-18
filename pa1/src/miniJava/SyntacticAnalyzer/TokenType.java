@@ -42,6 +42,7 @@ public enum TokenType {
     RPAREN,
     LBRACK,
     RBRACK,
+    BRACKETS,
     COMMA,
     PERIOD,
     SEMICOLON,

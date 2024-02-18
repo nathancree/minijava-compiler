@@ -107,8 +107,9 @@ public class Parser {
     } else {
       accept(TokenType.IDENTIFIER);
       if (_currentToken.getTokenType() == TokenType.LBRACK) {
-        accept(TokenType.LBRACK);
-        accept(TokenType.RBRACK);
+        accept(TokenType.BRACKETS);
+//        accept(TokenType.LBRACK);
+//        accept(TokenType.RBRACK);
       }
     }
   }
@@ -160,61 +161,90 @@ public class Parser {
       accept(TokenType.SEMICOLON);
     } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER) { // could be Reference or Type
       accept(TokenType.IDENTIFIER);
-      if (_currentToken.getTokenType() == TokenType.IDENTIFIER) {
+      if (_currentToken.getTokenType() == TokenType.BRACKETS) { //id[]
+        accept(TokenType.BRACKETS);
         accept(TokenType.IDENTIFIER);
         accept(TokenType.EQUALS);
         parseExpression();
         accept(TokenType.SEMICOLON);
-      } else if (_currentToken.getTokenType() == TokenType.LBRACK) { // accepts Type ID[]
-        accept(TokenType.LBRACK);
-        if (_currentToken.getTokenType() != TokenType.RBRACK) {
-          parseExpression();
-          accept(TokenType.RBRACK);
-        } else {
-          accept(TokenType.RBRACK);
-          accept(TokenType.IDENTIFIER);
-        }
-        accept(TokenType.EQUALS);
-        parseExpression();
-        accept(TokenType.SEMICOLON);
+      } else if (_currentToken.getTokenType() == TokenType.PERIOD) {
+        accept(TokenType.PERIOD);
+        parseReference();
       } else if (_currentToken.getTokenType() == TokenType.EQUALS) {
         accept(TokenType.EQUALS);
         parseExpression();
         accept(TokenType.SEMICOLON);
-      } else { // if (_currentToken.getTokenType() != TokenType.IDENTIFIER){
-        if (_currentToken.getTokenType() == TokenType.LPAREN) {
-          accept(TokenType.LPAREN);
-          if (_currentToken.getTokenType() != TokenType.RPAREN) {
-            parseArgumentList();
-          }
-          accept(TokenType.RPAREN);
-          accept(TokenType.SEMICOLON);
-        } else {
-          if (_currentToken.getTokenType() == TokenType.PERIOD) {
-            accept(TokenType.PERIOD);
-          }
-          parseReference();
-          if (_currentToken.getTokenType() == TokenType.EQUALS) {
-            accept(TokenType.EQUALS);
-            parseExpression();
-            accept(TokenType.SEMICOLON);
-          } else if (_currentToken.getTokenType() == TokenType.LBRACK) {
-            accept(TokenType.LBRACK);
-            parseExpression();
-            accept(TokenType.RBRACK);
-            accept(TokenType.EQUALS);
-            parseExpression();
-            accept(TokenType.SEMICOLON);
-          } else {
-            accept(TokenType.LPAREN);
-            if (_currentToken.getTokenType() != TokenType.RPAREN) {
-              parseArgumentList();
-            }
-            accept(TokenType.RPAREN);
-            accept(TokenType.SEMICOLON);
-          }
+      } else if (_currentToken.getTokenType() == TokenType.LBRACK) {
+        accept(TokenType.LBRACK);
+        parseExpression();
+        accept(TokenType.RBRACK);
+        accept(TokenType.EQUALS);
+        parseExpression();
+        accept(TokenType.SEMICOLON);
+      } else if (_currentToken.getTokenType() == TokenType.LPAREN) {
+        accept(TokenType.LPAREN);
+        if (_currentToken.getTokenType() != TokenType.RPAREN) {
+          parseArgumentList();
         }
+        accept(TokenType.RPAREN);
+        accept(TokenType.SEMICOLON);
       }
+
+//      if (_currentToken.getTokenType() == TokenType.IDENTIFIER) {
+//        accept(TokenType.IDENTIFIER);
+//        accept(TokenType.EQUALS);
+//        parseExpression();
+//        accept(TokenType.SEMICOLON);
+//      } else if (_currentToken.getTokenType() == TokenType.LBRACK) { // accepts Type ID[]
+//        accept(TokenType.LBRACK);
+//        if (_currentToken.getTokenType() != TokenType.RBRACK) {
+//          parseExpression();
+//          accept(TokenType.RBRACK);
+//        } else {
+//          accept(TokenType.RBRACK);
+//          accept(TokenType.IDENTIFIER);
+//        }
+//        accept(TokenType.EQUALS);
+//        parseExpression();
+//        accept(TokenType.SEMICOLON);
+//      } else if (_currentToken.getTokenType() == TokenType.EQUALS) {
+//        accept(TokenType.EQUALS);
+//        parseExpression();
+//        accept(TokenType.SEMICOLON);
+//      } else { // if (_currentToken.getTokenType() != TokenType.IDENTIFIER){
+//        if (_currentToken.getTokenType() == TokenType.LPAREN) {
+//          accept(TokenType.LPAREN);
+//          if (_currentToken.getTokenType() != TokenType.RPAREN) {
+//            parseArgumentList();
+//          }
+//          accept(TokenType.RPAREN);
+//          accept(TokenType.SEMICOLON);
+//        } else {
+//          if (_currentToken.getTokenType() == TokenType.PERIOD) {
+//            accept(TokenType.PERIOD);
+//          }
+//          parseReference();
+//          if (_currentToken.getTokenType() == TokenType.EQUALS) {
+//            accept(TokenType.EQUALS);
+//            parseExpression();
+//            accept(TokenType.SEMICOLON);
+//          } else if (_currentToken.getTokenType() == TokenType.LBRACK) {
+//            accept(TokenType.LBRACK);
+//            parseExpression();
+//            accept(TokenType.RBRACK);
+//            accept(TokenType.EQUALS);
+//            parseExpression();
+//            accept(TokenType.SEMICOLON);
+//          } else {
+//            accept(TokenType.LPAREN);
+//            if (_currentToken.getTokenType() != TokenType.RPAREN) {
+//              parseArgumentList();
+//            }
+//            accept(TokenType.RPAREN);
+//            accept(TokenType.SEMICOLON);
+//          }
+//        }
+//      }
     } else if (_currentToken.getTokenType() == TokenType.RETURN) {
       accept(TokenType.RETURN);
       if (_currentToken.getTokenType() != TokenType.SEMICOLON) {
