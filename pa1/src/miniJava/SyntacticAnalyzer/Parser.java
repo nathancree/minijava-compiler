@@ -189,6 +189,9 @@ public class Parser {
         }
         accept(TokenType.RPAREN);
         accept(TokenType.SEMICOLON);
+      } else {
+        _errors.reportError("Expected a Statement, but got \"" + _currentToken.getTokenText() + "\"");
+        throw new SyntaxError();
       }
 
 //      if (_currentToken.getTokenType() == TokenType.IDENTIFIER) {
