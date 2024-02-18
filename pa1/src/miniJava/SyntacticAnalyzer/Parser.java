@@ -100,14 +100,14 @@ public class Parser {
       accept(TokenType.BOOLEAN);
     } else if (_currentToken.getTokenType() == TokenType.INT) {
       accept(TokenType.INT);
-      if (_currentToken.getTokenType() == TokenType.LBRACK) {
+      if (_currentToken.getTokenType() == TokenType.BRACKETS) {
         accept(TokenType.BRACKETS);
 //        accept(TokenType.LBRACK);
 //        accept(TokenType.RBRACK);
       }
     } else {
       accept(TokenType.IDENTIFIER);
-      if (_currentToken.getTokenType() == TokenType.LBRACK) {
+      if (_currentToken.getTokenType() == TokenType.BRACKETS) {
         accept(TokenType.BRACKETS);
 //        accept(TokenType.LBRACK);
 //        accept(TokenType.RBRACK);
