@@ -19,4 +19,8 @@ public class Token {
 		// TODO: Return the token text
 		return _text;
 	}
+
+	public SourcePosition getTokenPosition() {
+		return null;
+	}
 }

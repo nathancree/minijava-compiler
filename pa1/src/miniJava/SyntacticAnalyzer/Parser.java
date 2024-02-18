@@ -1,6 +1,8 @@
 package miniJava.SyntacticAnalyzer;
 
 import miniJava.ErrorReporter;
+import miniJava.AbstractSyntaxTrees.Package;
+import miniJava.AbstractSyntaxTrees.*;
 
 public class Parser {
   private Scanner _scanner;
@@ -22,17 +24,22 @@ public class Parser {
   }
 
   // Program ::= (ClassDeclaration)* eot
-  private void parseProgram() throws SyntaxError {
+  private Package parseProgram() throws SyntaxError {
     // TODO: Keep parsing class declarations until eot
+    ClassDeclList cdl = new ClassDeclList();
     while (_currentToken.getTokenType() != TokenType.EOT) {
-      parseClassDeclaration();
+      cdl.add(parseClassDeclaration());
     }
+    return new Package(cdl,null);
   }
 
   // ClassDeclaration ::= class identifier { (FieldDeclaration|MethodDeclaration)* }
-  private void parseClassDeclaration() throws SyntaxError {
+  private ClassDecl parseClassDeclaration() throws SyntaxError {
     // TODO: Take in a "class" token (check by the TokenType)
     //  What should be done if the first token isn't "class"?
+    FieldDeclList fdl = new FieldDeclList();
+    MethodDeclList mdl = new MethodDeclList();
+    String cn = _currentToken.getTokenText();
     accept(TokenType.CLASS);
 
     // TODO: Take in an identifier token
@@ -41,31 +48,35 @@ public class Parser {
     accept(TokenType.LCURLY);
     // TODO: Parse either a FieldDeclaration or MethodDeclaration
     while (_currentToken.getTokenType() != TokenType.RCURLY) {
-      parseVisibility();
-      parseAccess();
+      boolean isPrivate = parseVisibility();
+      boolean isStatic = parseAccess();
       if (_currentToken.getTokenType() == TokenType.VOID) {
-        parseMethodDeclaration();
+        mdl.add(parseMethodDeclaration());
       } else {
-        parseType();
+        TypeDenoter t = parseType();
+        String name = _currentToken.getTokenText();
         accept(TokenType.IDENTIFIER);
         if (_currentToken.getTokenType() == TokenType.SEMICOLON) {
+          fdl.add(new FieldDecl(isPrivate, isStatic, t, name, null));
           accept(TokenType.SEMICOLON);
         } else {
-          parseMethodDeclaration();
+          mdl.add(parseMethodDeclaration());
         }
       }
     }
     // TODO: Take in a }
     accept(TokenType.RCURLY);
+    return new ClassDecl(cn, fdl, mdl, null);
   }
 
-  private void parseFieldDeclaration() throws SyntaxError {
+  private FieldDecl parseFieldDeclaration() throws SyntaxError {
     parseType();
     accept(TokenType.IDENTIFIER);
     accept(TokenType.SEMICOLON);
+    return null;
   }
 
-  private void parseMethodDeclaration() throws SyntaxError {
+  private MethodDecl parseMethodDeclaration() throws SyntaxError {
     if (_currentToken.getTokenType() == TokenType.VOID) {
       accept(TokenType.VOID);
       accept(TokenType.IDENTIFIER);
@@ -82,40 +93,41 @@ public class Parser {
     accept(TokenType.RCURLY);
   }
 
-  private void parseVisibility() throws SyntaxError {
-    if (_currentToken.getTokenType() == TokenType.PUBLIC
-        || _currentToken.getTokenType() == TokenType.PRIVATE) {
+  private boolean parseVisibility() throws SyntaxError { //returns true if visibility is private
+    if (_currentToken.getTokenType() == TokenType.PUBLIC) {
       _currentToken = _scanner.scan();
+    } else if (_currentToken.getTokenType() == TokenType.PRIVATE) {
+      _currentToken = _scanner.scan();
+      return true;
     }
+    return false;
   }
 
-  private void parseAccess() throws SyntaxError {
+  private boolean parseAccess() throws SyntaxError { // returns true if static
     if (_currentToken.getTokenType() == TokenType.STATIC) {
       _currentToken = _scanner.scan();
+      return true;
     }
+    return false;
   }
 
-  private void parseType() throws SyntaxError {
+  private TypeDenoter parseType() throws SyntaxError {
     if (_currentToken.getTokenType() == TokenType.BOOLEAN) {
       accept(TokenType.BOOLEAN);
     } else if (_currentToken.getTokenType() == TokenType.INT) {
       accept(TokenType.INT);
       if (_currentToken.getTokenType() == TokenType.BRACKETS) {
         accept(TokenType.BRACKETS);
-//        accept(TokenType.LBRACK);
-//        accept(TokenType.RBRACK);
       }
     } else {
       accept(TokenType.IDENTIFIER);
       if (_currentToken.getTokenType() == TokenType.BRACKETS) {
         accept(TokenType.BRACKETS);
-//        accept(TokenType.LBRACK);
-//        accept(TokenType.RBRACK);
       }
     }
   }
 
-  private void parseParameterList() throws SyntaxError {
+  private ParameterDeclList parseParameterList() throws SyntaxError {
     parseType();
     accept(TokenType.IDENTIFIER);
 
@@ -126,7 +138,7 @@ public class Parser {
     }
   }
 
-  private void parseArgumentList() throws SyntaxError {
+  private ExprList parseArgumentList() throws SyntaxError {
     parseExpression();
     while (_currentToken.getTokenType() == TokenType.COMMA) {
       accept(TokenType.COMMA);
@@ -134,7 +146,7 @@ public class Parser {
     }
   }
 
-  private void parseReference() throws SyntaxError {
+  private Reference parseReference() throws SyntaxError { //check method return type
     if (_currentToken.getTokenType() == TokenType.IDENTIFIER) {
       accept(TokenType.IDENTIFIER);
     } else {
@@ -146,7 +158,7 @@ public class Parser {
     }
   }
 
-  private void parseStatement() throws SyntaxError {
+  private Statement parseStatement() throws SyntaxError {
     if (_currentToken.getTokenType() == TokenType.LCURLY) {
       accept(TokenType.LCURLY);
       while (_currentToken.getTokenType() != TokenType.RCURLY) {
@@ -199,62 +211,6 @@ public class Parser {
         _errors.reportError("Expected a Statement, but got \"" + _currentToken.getTokenText() + "\"");
         throw new SyntaxError();
       }
-
-//      if (_currentToken.getTokenType() == TokenType.IDENTIFIER) {
-//        accept(TokenType.IDENTIFIER);
-//        accept(TokenType.EQUALS);
-//        parseExpression();
-//        accept(TokenType.SEMICOLON);
-//      } else if (_currentToken.getTokenType() == TokenType.LBRACK) { // accepts Type ID[]
-//        accept(TokenType.LBRACK);
-//        if (_currentToken.getTokenType() != TokenType.RBRACK) {
-//          parseExpression();
-//          accept(TokenType.RBRACK);
-//        } else {
-//          accept(TokenType.RBRACK);
-//          accept(TokenType.IDENTIFIER);
-//        }
-//        accept(TokenType.EQUALS);
-//        parseExpression();
-//        accept(TokenType.SEMICOLON);
-//      } else if (_currentToken.getTokenType() == TokenType.EQUALS) {
-//        accept(TokenType.EQUALS);
-//        parseExpression();
-//        accept(TokenType.SEMICOLON);
-//      } else { // if (_currentToken.getTokenType() != TokenType.IDENTIFIER){
-//        if (_currentToken.getTokenType() == TokenType.LPAREN) {
-//          accept(TokenType.LPAREN);
-//          if (_currentToken.getTokenType() != TokenType.RPAREN) {
-//            parseArgumentList();
-//          }
-//          accept(TokenType.RPAREN);
-//          accept(TokenType.SEMICOLON);
-//        } else {
-//          if (_currentToken.getTokenType() == TokenType.PERIOD) {
-//            accept(TokenType.PERIOD);
-//          }
-//          parseReference();
-//          if (_currentToken.getTokenType() == TokenType.EQUALS) {
-//            accept(TokenType.EQUALS);
-//            parseExpression();
-//            accept(TokenType.SEMICOLON);
-//          } else if (_currentToken.getTokenType() == TokenType.LBRACK) {
-//            accept(TokenType.LBRACK);
-//            parseExpression();
-//            accept(TokenType.RBRACK);
-//            accept(TokenType.EQUALS);
-//            parseExpression();
-//            accept(TokenType.SEMICOLON);
-//          } else {
-//            accept(TokenType.LPAREN);
-//            if (_currentToken.getTokenType() != TokenType.RPAREN) {
-//              parseArgumentList();
-//            }
-//            accept(TokenType.RPAREN);
-//            accept(TokenType.SEMICOLON);
-//          }
-//        }
-//      }
     } else if (_currentToken.getTokenType() == TokenType.RETURN) {
       accept(TokenType.RETURN);
       if (_currentToken.getTokenType() != TokenType.SEMICOLON) {
@@ -283,7 +239,7 @@ public class Parser {
     }
   }
 
-  private void parseExpression() throws SyntaxError {
+  private Expression parseExpression() throws SyntaxError {
     if (_currentToken.getTokenType() == TokenType.IDENTIFIER
         || _currentToken.getTokenType() == TokenType.THIS) {
       parseReference();
