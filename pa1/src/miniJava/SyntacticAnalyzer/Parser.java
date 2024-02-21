@@ -52,16 +52,16 @@ public class Parser {
       boolean isPrivate = parseVisibility();
       boolean isStatic = parseAccess();
       if (_currentToken.getTokenType() == TokenType.VOID) {
-        mdl.add(parseMethodDeclaration());
+        mdl.add(parseMethodDeclaration(null));
       } else {
         TypeDenoter t = parseType();
-        String name = _currentToken.getTokenText();
+        FieldDecl fd = new FieldDecl(isPrivate, isStatic, t, _currentToken.getTokenText(), null);
         accept(TokenType.IDENTIFIER);
         if (_currentToken.getTokenType() == TokenType.SEMICOLON) {
-          fdl.add(new FieldDecl(isPrivate, isStatic, t, name, null));
+          fdl.add(fd);
           accept(TokenType.SEMICOLON);
         } else {
-          mdl.add(parseMethodDeclaration());
+          mdl.add(parseMethodDeclaration(fd));
         }
       }
     }
@@ -77,13 +77,14 @@ public class Parser {
     return null;
   }
   //TODO:
-  private MethodDecl parseMethodDeclaration(/*boolean isPrivate, boolean isStatic*/) throws SyntaxError {
-    MemberDecl md;
+  private MethodDecl parseMethodDeclaration(FieldDecl fieldDecl/*boolean isPrivate, boolean isStatic, TypeDenoter t0*/) throws SyntaxError {
+    TypeDenoter t1 = new BaseType(TypeKind.VOID, null);
+    FieldDecl fd = fieldDecl;
     ParameterDeclList paraml = new ParameterDeclList();
     StatementList statel = new StatementList();
     if (_currentToken.getTokenType() == TokenType.VOID) {
       accept(TokenType.VOID);
-//      md = new MemberDecl(isPrivate, isStatic, new BaseType(TypeKind.BOOLEAN, null), _currentToken, _currentToken.getTokenText(), null);
+      fd = new FieldDecl(fieldDecl.isPrivate, fieldDecl.isStatic, t1, _currentToken.getTokenText(), null);
       accept(TokenType.IDENTIFIER);
     }
     accept(TokenType.LPAREN);
@@ -96,7 +97,7 @@ public class Parser {
       statel.add(parseStatement());
     }
     accept(TokenType.RCURLY);
-    return new MethodDecl(null, paraml, statel, null); //TODO: WARNING NO RIGHT DOESNT WORK
+    return new MethodDecl(fd, paraml, statel, null); //TODO: WARNING NO RIGHT DOESNT WORK
   }
 
   private boolean parseVisibility() throws SyntaxError { //returns true if visibility is private
