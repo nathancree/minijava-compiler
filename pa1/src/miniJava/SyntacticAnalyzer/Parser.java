@@ -340,7 +340,13 @@ public class Parser {
         accept(TokenType.OPERATOR);
         Expression expr = parseExpression();
 //        return new BinaryExpr(op, new RefExpr(ref, null), expr, null);
-        finalExpr = new BinaryExpr(op, new RefExpr(ref, null), expr, null);
+        if (expr instanceof BinaryExpr) {
+//          finalExpr = new BinaryExpr(((BinaryExpr) expr).operator, new UnaryExpr(op, ((BinaryExpr) expr).left, null), ((BinaryExpr) expr).right, null);
+          finalExpr = new BinaryExpr(((BinaryExpr) expr).operator, new BinaryExpr(op, new RefExpr(ref, null), ((BinaryExpr) expr).left, null), ((BinaryExpr) expr).right, null);
+        } else {
+          finalExpr = new BinaryExpr(op, new RefExpr(ref, null), expr, null);
+        }
+//        finalExpr = new BinaryExpr(op, new RefExpr(ref, null), expr, null);
 
       }
     } else if (_currentToken.getTokenText().equals("!")
@@ -375,7 +381,12 @@ public class Parser {
         accept(TokenType.OPERATOR);
         Expression expr = parseExpression();
 //        return new BinaryExpr(op, expr0, expr, null);
-        finalExpr = new BinaryExpr(op, expr0, expr, null);
+        if (expr instanceof BinaryExpr) {
+//          finalExpr = new BinaryExpr(((BinaryExpr) expr).operator, new UnaryExpr(op, ((BinaryExpr) expr).left, null), ((BinaryExpr) expr).right, null);
+          finalExpr = new BinaryExpr(((BinaryExpr) expr).operator, new BinaryExpr(op, expr0, ((BinaryExpr) expr).left, null), ((BinaryExpr) expr).right, null);
+        } else {
+          finalExpr = new BinaryExpr(op, expr0, expr, null);
+        }
 
       } else {
         //      return expr0;
@@ -421,6 +432,7 @@ public class Parser {
       accept(TokenType.OPERATOR);
       Expression expr = parseExpression();
 //      return new BinaryExpr(op, finalExpr, expr, null); //TODO: WARNING THIS AINT RIGHT
+
       finalExpr = new BinaryExpr(op, finalExpr, expr, null);
 
     }
