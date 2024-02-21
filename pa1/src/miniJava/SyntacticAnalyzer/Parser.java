@@ -311,6 +311,7 @@ public class Parser {
     }
   }
   private Expression parseExpression() throws SyntaxError {
+    Expression finalExpr = null;
     if (_currentToken.getTokenType() == TokenType.IDENTIFIER
         || _currentToken.getTokenType() == TokenType.THIS) {
       Reference ref = parseReference();
@@ -318,7 +319,8 @@ public class Parser {
         accept(TokenType.LBRACK);
         Expression expr = parseExpression();
         accept(TokenType.RBRACK);
-        return new IxExpr(ref, expr, null);
+//        return new IxExpr(ref, expr, null);
+        finalExpr = new IxExpr(ref, expr, null);
       } else if (_currentToken.getTokenType() == TokenType.LPAREN) {
         ExprList exprl = new ExprList();
         accept(TokenType.LPAREN);
@@ -326,26 +328,36 @@ public class Parser {
           exprl = parseArgumentList();
         }
         accept(TokenType.RPAREN);
-        return new CallExpr(ref, exprl, null);
+//        return new CallExpr(ref, exprl, null);
+        finalExpr = new CallExpr(ref, exprl, null);
+
       } else if (_currentToken.getTokenType() == TokenType.SEMICOLON || _currentToken.getTokenType() == TokenType.RPAREN || _currentToken.getTokenType() == TokenType.RBRACK || _currentToken.getTokenType() == TokenType.COMMA) {
-        return new RefExpr(ref, null);
+//        return new RefExpr(ref, null);
+        finalExpr = new RefExpr(ref, null);
+
       } else if (_currentToken.getTokenType() == TokenType.OPERATOR && !_currentToken.getTokenText().equals("!")) {
         Operator op = new Operator(_currentToken);
         accept(TokenType.OPERATOR);
         Expression expr = parseExpression();
-        return new BinaryExpr(op, new RefExpr(ref, null), expr, null);
+//        return new BinaryExpr(op, new RefExpr(ref, null), expr, null);
+        finalExpr = new BinaryExpr(op, new RefExpr(ref, null), expr, null);
+
       }
     } else if (_currentToken.getTokenText().equals("!")
         || _currentToken.getTokenText().equals("-")) { // TODO: warning need to check - for unop or binop?
       Operator op = new Operator(_currentToken);
       _currentToken = _scanner.scan();
       Expression expr = parseExpression();
-      return new UnaryExpr(op, expr, null);
+//      return new UnaryExpr(op, expr, null);
+      finalExpr = new UnaryExpr(op, expr, null);
+
     } else if (_currentToken.getTokenType() == TokenType.LPAREN) {
       accept(TokenType.LPAREN);
       Expression expr = parseExpression();
       accept(TokenType.RPAREN);
-      return expr;
+//      return expr;
+      finalExpr = expr;
+
     } else if (_currentToken.getTokenType() == TokenType.INTLITERAL
         || _currentToken.getTokenType() == TokenType.BOOLEANLITERAL) { // TODO: warning need to check for expression at start not just int or bool
       Expression expr0;
@@ -359,9 +371,12 @@ public class Parser {
         Operator op = new Operator(_currentToken);
         accept(TokenType.OPERATOR);
         Expression expr = parseExpression();
-        return new BinaryExpr(op, expr0, expr, null);
+//        return new BinaryExpr(op, expr0, expr, null);
+        finalExpr = new BinaryExpr(op, expr0, expr, null);
+
       }
-      return expr0;
+//      return expr0;
+      finalExpr = expr0;
     } else if (_currentToken.getTokenType() == TokenType.NEW) {
       accept(TokenType.NEW);
       if (_currentToken.getTokenType() == TokenType.INT) {
@@ -370,20 +385,26 @@ public class Parser {
         accept(TokenType.LBRACK);
         Expression expr = parseExpression();
         accept(TokenType.RBRACK);
-        return new NewArrayExpr(td, expr, null);
+//        return new NewArrayExpr(td, expr, null);
+        finalExpr = new NewArrayExpr(td, expr, null);
+
       } else {
         ClassType ct = new ClassType(new Identifier(_currentToken), null);
         accept(TokenType.IDENTIFIER);
         if (_currentToken.getTokenType() == TokenType.LPAREN) {
           accept(TokenType.LPAREN);
           accept(TokenType.RPAREN);
-          return new NewObjectExpr(ct, null);
-          }
+//          return new NewObjectExpr(ct, null);
+          finalExpr = new NewObjectExpr(ct, null);
+
+        }
 //        } else {
           accept(TokenType.LBRACK);
           Expression expr = parseExpression();
           accept(TokenType.RBRACK);
-          return new NewArrayExpr(ct, expr, null);
+//          return new NewArrayExpr(ct, expr, null);
+          finalExpr = new NewArrayExpr(ct, expr, null);
+
 //        }
       }
     } else {
@@ -398,7 +419,7 @@ public class Parser {
       Expression expr = parseExpression();
       return new UnaryExpr(op, expr, null); //TODO: WARNING THIS AINT RIGHT
     }
-    return null;
+    return finalExpr;
   }
 
   // This method will accept the token and retrieve the next token.
