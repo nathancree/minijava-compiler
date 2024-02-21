@@ -40,10 +40,10 @@ public class Parser {
     //  What should be done if the first token isn't "class"?
     FieldDeclList fdl = new FieldDeclList();
     MethodDeclList mdl = new MethodDeclList();
-    String cn = _currentToken.getTokenText();
     accept(TokenType.CLASS);
 
     // TODO: Take in an identifier token
+    String cn = _currentToken.getTokenText();
     accept(TokenType.IDENTIFIER);
     // TODO: Take in a {
     accept(TokenType.LCURLY);
@@ -303,6 +303,8 @@ public class Parser {
         }
         accept(TokenType.RPAREN);
         return new CallExpr(ref, exprl, null);
+      } else if (_currentToken.getTokenType() == TokenType.SEMICOLON) {
+        return new RefExpr(ref, null);
       }
     } else if (_currentToken.getTokenText().equals("!")
         || _currentToken.getTokenText().equals("-")) { // TODO: warning need to check - for unop or binop?

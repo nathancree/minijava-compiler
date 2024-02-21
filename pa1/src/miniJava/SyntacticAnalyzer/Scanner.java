@@ -223,6 +223,7 @@ public class Scanner {
           skipIt();
         }
       }
+      _errors.reportError("Unterminated '/*' comment");
     }
     return makeToken(TokenType.EOT); // Should never get here
   }
