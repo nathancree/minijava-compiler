@@ -417,7 +417,9 @@ public class Parser {
       Operator op = new Operator(_currentToken);
       accept(TokenType.OPERATOR);
       Expression expr = parseExpression();
-      return new UnaryExpr(op, expr, null); //TODO: WARNING THIS AINT RIGHT
+//      return new BinaryExpr(op, finalExpr, expr, null); //TODO: WARNING THIS AINT RIGHT
+      finalExpr = new BinaryExpr(op, finalExpr, expr, null);
+
     }
     return finalExpr;
   }
