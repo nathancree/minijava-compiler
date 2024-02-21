@@ -374,9 +374,10 @@ public class Parser {
 //        return new BinaryExpr(op, expr0, expr, null);
         finalExpr = new BinaryExpr(op, expr0, expr, null);
 
+      } else {
+        //      return expr0;
+        finalExpr = expr0;
       }
-//      return expr0;
-      finalExpr = expr0;
     } else if (_currentToken.getTokenType() == TokenType.NEW) {
       accept(TokenType.NEW);
       if (_currentToken.getTokenType() == TokenType.INT) {
@@ -397,15 +398,14 @@ public class Parser {
 //          return new NewObjectExpr(ct, null);
           finalExpr = new NewObjectExpr(ct, null);
 
-        }
-//        } else {
+        } else {
           accept(TokenType.LBRACK);
           Expression expr = parseExpression();
           accept(TokenType.RBRACK);
 //          return new NewArrayExpr(ct, expr, null);
           finalExpr = new NewArrayExpr(ct, expr, null);
 
-//        }
+        }
       }
     } else {
       _errors.reportError(
