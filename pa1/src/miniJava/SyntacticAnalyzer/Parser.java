@@ -52,7 +52,7 @@ public class Parser {
       boolean isPrivate = parseVisibility();
       boolean isStatic = parseAccess();
       if (_currentToken.getTokenType() == TokenType.VOID) {
-        mdl.add(parseMethodDeclaration(null));
+        mdl.add(parseMethodDeclaration(null, isPrivate, isStatic));
       } else {
         TypeDenoter t = parseType();
         FieldDecl fd = new FieldDecl(isPrivate, isStatic, t, _currentToken.getTokenText(), null);
@@ -61,7 +61,7 @@ public class Parser {
           fdl.add(fd);
           accept(TokenType.SEMICOLON);
         } else {
-          mdl.add(parseMethodDeclaration(fd));
+          mdl.add(parseMethodDeclaration(fd, isPrivate, isStatic));
         }
       }
     }
@@ -77,14 +77,13 @@ public class Parser {
     return null;
   }
   //TODO:
-  private MethodDecl parseMethodDeclaration(FieldDecl fieldDecl/*boolean isPrivate, boolean isStatic, TypeDenoter t0*/) throws SyntaxError {
-    TypeDenoter t1 = new BaseType(TypeKind.VOID, null);
+  private MethodDecl parseMethodDeclaration(FieldDecl fieldDecl, boolean isPrivate, boolean isStatic) throws SyntaxError {
     FieldDecl fd = fieldDecl;
     ParameterDeclList paraml = new ParameterDeclList();
     StatementList statel = new StatementList();
     if (_currentToken.getTokenType() == TokenType.VOID) {
       accept(TokenType.VOID);
-      fd = new FieldDecl(fieldDecl.isPrivate, fieldDecl.isStatic, t1, _currentToken.getTokenText(), null);
+      fd = new FieldDecl(isPrivate, isStatic, new BaseType(TypeKind.VOID, null), _currentToken.getTokenText(), null);
       accept(TokenType.IDENTIFIER);
     }
     accept(TokenType.LPAREN);
