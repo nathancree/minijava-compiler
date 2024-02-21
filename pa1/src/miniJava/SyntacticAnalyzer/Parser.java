@@ -129,12 +129,14 @@ public class Parser {
         accept(TokenType.BRACKETS);
       }
     } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER){
-      typeKind = TypeKind.CLASS;
+      Identifier cn = new Identifier(_currentToken);
       accept(TokenType.IDENTIFIER);
       if (_currentToken.getTokenType() == TokenType.BRACKETS) {
         typeKind = TypeKind.ARRAY;
         accept(TokenType.BRACKETS);
+        return new ArrayType(new BaseType(typeKind, null), null);
       }
+      return new ClassType(cn, null);
     } else {
       typeKind = TypeKind.UNSUPPORTED;
     }
@@ -205,7 +207,8 @@ public class Parser {
     } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER) { // could be Reference or Type
       String id0 = _currentToken.getTokenText();
       Identifier id = new Identifier(_currentToken);
-      accept(TokenType.IDENTIFIER);
+//      accept(TokenType.IDENTIFIER);
+      TypeDenoter t0 = parseType();
       if (_currentToken.getTokenType() == TokenType.BRACKETS) { //id[]
         accept(TokenType.BRACKETS);
         String name = _currentToken.getTokenText();
@@ -214,7 +217,7 @@ public class Parser {
         accept(TokenType.EQUALS);
         Expression expr = parseExpression();
         accept(TokenType.SEMICOLON);
-        return new VarDeclStmt(new VarDecl(t, name, null), expr, null);
+        return new VarDeclStmt(new VarDecl(t0, name, null), expr, null);
       } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER) {
 //        accept(TokenType.IDENTIFIER);
         String name = _currentToken.getTokenText();
@@ -222,7 +225,7 @@ public class Parser {
         accept(TokenType.EQUALS);
         Expression expr = parseExpression();
         accept(TokenType.SEMICOLON);
-        return new VarDeclStmt(new VarDecl(t, name, null), expr, null);
+        return new VarDeclStmt(new VarDecl(t0, name, null), expr, null);
       } else if (_currentToken.getTokenType() == TokenType.PERIOD) {
         accept(TokenType.PERIOD);
 //        parseReference();
