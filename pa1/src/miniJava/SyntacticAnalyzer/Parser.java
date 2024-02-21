@@ -349,8 +349,11 @@ public class Parser {
       _currentToken = _scanner.scan();
       Expression expr = parseExpression();
 //      return new UnaryExpr(op, expr, null);
-      finalExpr = new UnaryExpr(op, expr, null);
-
+      if (expr instanceof BinaryExpr) {
+        finalExpr = new BinaryExpr(((BinaryExpr) expr).operator, new UnaryExpr(op, ((BinaryExpr) expr).left, null), ((BinaryExpr) expr).right, null);
+      } else {
+        finalExpr = new UnaryExpr(op, expr, null);
+      }
     } else if (_currentToken.getTokenType() == TokenType.LPAREN) {
       accept(TokenType.LPAREN);
       Expression expr = parseExpression();
