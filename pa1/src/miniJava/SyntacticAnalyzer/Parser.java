@@ -136,7 +136,11 @@ public class Parser {
         accept(TokenType.BRACKETS);
         return new ArrayType(new ClassType(cn, null), null);
       }
-      return new ClassType(cn, null);
+      if (_currentToken.getTokenType() == TokenType.PERIOD) {
+        return null;
+      } else {
+        return new ClassType(cn, null);
+      }
     } else {
       typeKind = TypeKind.UNSUPPORTED;
     }
@@ -174,9 +178,11 @@ public class Parser {
       Identifier id = new Identifier(_currentToken);
       ref = new IdRef(id, null);
       accept(TokenType.IDENTIFIER);
-    } else {
+    } else if (_currentToken.getTokenType() == TokenType.THIS){
       ref = new ThisRef(null);
       accept(TokenType.THIS);
+    } else {
+      ref = null;
     }
     while (_currentToken.getTokenType() == TokenType.PERIOD) {
       accept(TokenType.PERIOD);
@@ -210,11 +216,20 @@ public class Parser {
 //      accept(TokenType.IDENTIFIER);
       Reference ref;
       TypeDenoter t0 = null;
-      if (_currentToken.getTokenType() == TokenType.THIS) {
-        ref = parseReference();
-      } else {
-        ref = new IdRef(id, null);
-        t0 = parseType();
+//      ref = new IdRef(id, null);
+//      t0 = parseType();
+//      if (_currentToken.getTokenType() == TokenType.THIS) {
+//        ref = parseReference();
+//      } else {
+//        ref = new IdRef(id, null);
+//        t0 = parseType();
+//      }
+      ref = parseReference();
+      if (ref instanceof IdRef) {
+        t0 = new ClassType(id, null);
+        if (_currentToken.getTokenType() == TokenType.BRACKETS){
+          t0 = new ArrayType(t0, null);
+        }
       }
       if (_currentToken.getTokenType() == TokenType.BRACKETS) { //id[]
         accept(TokenType.BRACKETS);
@@ -234,7 +249,7 @@ public class Parser {
         accept(TokenType.SEMICOLON);
         return new VarDeclStmt(new VarDecl(t0, name, null), expr, null);
       } else if (_currentToken.getTokenType() == TokenType.PERIOD) {
-        accept(TokenType.PERIOD);
+//        accept(TokenType.PERIOD);
 //        parseReference();
         return parseStatement();
       } else if (_currentToken.getTokenType() == TokenType.EQUALS) {
