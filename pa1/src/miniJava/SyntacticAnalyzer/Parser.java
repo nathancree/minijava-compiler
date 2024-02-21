@@ -15,12 +15,13 @@ public class Parser {
     this._currentToken = this._scanner.scan();
   }
 
-  public void parse() {
+  public Package parse() {
     try {
       // The first thing we need to parse is the Program symbol
-      parseProgram();
+      return parseProgram();
     } catch (SyntaxError e) {
     }
+    return null;
   }
 
   // Program ::= (ClassDeclaration)* eot
