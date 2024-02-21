@@ -125,8 +125,8 @@ public class Parser {
       typeKind = TypeKind.INT;
       accept(TokenType.INT);
       if (_currentToken.getTokenType() == TokenType.BRACKETS) {
-        typeKind = TypeKind.ARRAY;
         accept(TokenType.BRACKETS);
+        return new ArrayType(new BaseType(typeKind, null), null);
       }
     } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER){
       Identifier cn = new Identifier(_currentToken);
@@ -134,7 +134,7 @@ public class Parser {
       if (_currentToken.getTokenType() == TokenType.BRACKETS) {
         typeKind = TypeKind.ARRAY;
         accept(TokenType.BRACKETS);
-        return new ArrayType(new BaseType(typeKind, null), null);
+        return new ArrayType(new ClassType(cn, null), null);
       }
       return new ClassType(cn, null);
     } else {
