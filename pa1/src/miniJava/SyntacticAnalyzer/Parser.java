@@ -306,8 +306,13 @@ public class Parser {
         }
         accept(TokenType.RPAREN);
         return new CallExpr(ref, exprl, null);
-      } else if (_currentToken.getTokenType() == TokenType.SEMICOLON) {
+      } else if (_currentToken.getTokenType() == TokenType.SEMICOLON || _currentToken.getTokenType() == TokenType.RPAREN || _currentToken.getTokenType() == TokenType.RBRACK) {
         return new RefExpr(ref, null);
+      } else if (_currentToken.getTokenType() == TokenType.OPERATOR) {
+        Operator op = new Operator(_currentToken);
+        accept(TokenType.OPERATOR);
+        Expression expr = parseExpression();
+        return new BinaryExpr(op, new RefExpr(ref, null), expr, null);
       }
     } else if (_currentToken.getTokenText().equals("!")
         || _currentToken.getTokenText().equals("-")) { // TODO: warning need to check - for unop or binop?
