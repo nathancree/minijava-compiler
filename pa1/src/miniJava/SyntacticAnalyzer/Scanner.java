@@ -38,14 +38,8 @@ public class Scanner {
       return makeToken(TokenType.EOT);
     }
     // skip white space
-    while (_currentChar == ' '
-        || _currentChar == '\n'
-        || _currentChar == '\t'
-        || _currentChar == '\r') {
-      if (_endOfFileReached) {
-        return makeToken(TokenType.EOT);
-      }
-      skipIt();
+    if (whiteSpaceScan()) {
+      return makeToken(TokenType.EOT);
     }
     // check for comments
     if (_currentChar == '/') {
@@ -91,6 +85,7 @@ public class Scanner {
       return makeToken(TokenType.RCURLY);
     } else if (_currentChar == '[') {
       takeIt();
+      whiteSpaceScan();
       if(_currentChar == ']') {
         takeIt();
         return makeToken(TokenType.BRACKETS);
@@ -226,6 +221,19 @@ public class Scanner {
       _errors.reportError("Unterminated '/*' comment");
     }
     return makeToken(TokenType.EOT); // Should never get here
+  }
+
+  private boolean whiteSpaceScan() {
+    while (_currentChar == ' '
+            || _currentChar == '\n'
+            || _currentChar == '\t'
+            || _currentChar == '\r') {
+      if (_endOfFileReached) {
+        return true;
+      }
+      skipIt();
+    }
+    return false;
   }
 
   private void takeIt() {

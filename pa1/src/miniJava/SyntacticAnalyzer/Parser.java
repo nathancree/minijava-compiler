@@ -204,11 +204,18 @@ public class Parser {
       Expression expr = parseExpression();
       accept(TokenType.SEMICOLON);
       return new VarDeclStmt(new VarDecl(t, name, null), expr, null);
-    } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER) { // could be Reference or Type
+    } else if (_currentToken.getTokenType() == TokenType.IDENTIFIER || _currentToken.getTokenType() == TokenType.THIS) { // could be Reference or Type
       String id0 = _currentToken.getTokenText();
       Identifier id = new Identifier(_currentToken);
 //      accept(TokenType.IDENTIFIER);
-      TypeDenoter t0 = parseType();
+      Reference ref;
+      TypeDenoter t0 = null;
+      if (_currentToken.getTokenType() == TokenType.THIS) {
+        ref = parseReference();
+      } else {
+        ref = new IdRef(id, null);
+        t0 = parseType();
+      }
       if (_currentToken.getTokenType() == TokenType.BRACKETS) { //id[]
         accept(TokenType.BRACKETS);
         String name = _currentToken.getTokenText();
@@ -229,12 +236,12 @@ public class Parser {
       } else if (_currentToken.getTokenType() == TokenType.PERIOD) {
         accept(TokenType.PERIOD);
 //        parseReference();
-        parseStatement();
+        return parseStatement();
       } else if (_currentToken.getTokenType() == TokenType.EQUALS) {
         accept(TokenType.EQUALS);
         Expression expr = parseExpression();
         accept(TokenType.SEMICOLON);
-        return new AssignStmt(new IdRef(id, null), expr, null);
+        return new AssignStmt(ref, expr, null);
       } else if (_currentToken.getTokenType() == TokenType.LBRACK) {
         accept(TokenType.LBRACK);
         Expression expr0 = parseExpression();
@@ -242,7 +249,7 @@ public class Parser {
         accept(TokenType.EQUALS);
         Expression expr1 = parseExpression();
         accept(TokenType.SEMICOLON);
-        return new IxAssignStmt(new IdRef(id, null), expr0, expr1, null);
+        return new IxAssignStmt(ref, expr0, expr1, null);
       } else if (_currentToken.getTokenType() == TokenType.LPAREN) {
         ExprList exprl = new ExprList();
         accept(TokenType.LPAREN);
@@ -251,7 +258,7 @@ public class Parser {
         }
         accept(TokenType.RPAREN);
         accept(TokenType.SEMICOLON);
-        return new CallStmt(new IdRef(id, null), exprl, null);
+        return new CallStmt(ref, exprl, null);
       } else {
         _errors.reportError("Expected a Statement, but got \"" + _currentToken.getTokenText() + "\"");
         throw new SyntaxError();
@@ -287,7 +294,6 @@ public class Parser {
       _errors.reportError("Expected a Statement, but got \"" + _currentToken.getTokenText() + "\"");
       throw new SyntaxError();
     }
-    return null;
   }
   private Expression parseExpression() throws SyntaxError {
     if (_currentToken.getTokenType() == TokenType.IDENTIFIER
@@ -306,9 +312,9 @@ public class Parser {
         }
         accept(TokenType.RPAREN);
         return new CallExpr(ref, exprl, null);
-      } else if (_currentToken.getTokenType() == TokenType.SEMICOLON || _currentToken.getTokenType() == TokenType.RPAREN || _currentToken.getTokenType() == TokenType.RBRACK) {
+      } else if (_currentToken.getTokenType() == TokenType.SEMICOLON || _currentToken.getTokenType() == TokenType.RPAREN || _currentToken.getTokenType() == TokenType.RBRACK || _currentToken.getTokenType() == TokenType.COMMA) {
         return new RefExpr(ref, null);
-      } else if (_currentToken.getTokenType() == TokenType.OPERATOR) {
+      } else if (_currentToken.getTokenType() == TokenType.OPERATOR && !_currentToken.getTokenText().equals("!")) {
         Operator op = new Operator(_currentToken);
         accept(TokenType.OPERATOR);
         Expression expr = parseExpression();
