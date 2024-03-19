@@ -10,7 +10,7 @@ public class Identification implements Visitor<Object,Object> {
 
     public Identification(ErrorReporter errors) {
         this._errors = errors;
-
+        si = new ScopedIdentification(_errors);
         try {
 //            si.addDeclaration("System", new ClassDecl());
         } catch (Exception e) {

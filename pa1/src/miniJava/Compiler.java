@@ -47,7 +47,7 @@ public class Compiler {
       Identification id = new Identification(errorReports);
       id.parse(pack);
       System.out.println("Success");
-      ASTDisplay display = new ASTDisplay();
+//      ASTDisplay display = new ASTDisplay();
 //      display.showTree(ast);
     }
 
