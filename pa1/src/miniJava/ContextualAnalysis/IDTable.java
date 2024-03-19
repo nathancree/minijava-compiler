@@ -12,10 +12,6 @@ public class IDTable {
         this.table = new HashMap<>();
     }
 
-//    public IDTable(int level) {
-//        this.table = new HashMap<>();
-//    }
-
     public void addDeclaration(String identifier, Declaration declaration) throws Exception { //throws Identification.IdentificationError {
         if (table.containsKey(identifier)) {
 //            throw new Identification.IdentificationError();

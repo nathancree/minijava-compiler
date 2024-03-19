@@ -36,6 +36,8 @@ public class Compiler {
     // TODO: Call the parser's parse function
 //    AST ast = parser.parse();
     Package pack = parser.parse();
+    Identification id = new Identification(errorReports);
+    id.parse(pack);
 
     // TODO: Check if any errors exist, if so, println("Error")
     //  then output the errors
@@ -43,9 +45,7 @@ public class Compiler {
       System.out.println("Error");
       errorReports.outputErrors();
     } else {
-      // TODO: If there are no errors, println("Success")
-      Identification id = new Identification(errorReports);
-      id.parse(pack);
+
       System.out.println("Success");
 //      ASTDisplay display = new ASTDisplay();
 //      display.showTree(ast);

@@ -14,8 +14,8 @@ public class ScopedIdentification {
         this._errors = errors;
         this.stack = new ArrayDeque<>();
         this.stack.push(new IDTable()); // Level 0
-        this.level = 0;
-//        this.stack.push(new IDTable()); // Level 1
+        this.level = 1; // Might not actually need this
+        this.stack.push(new IDTable()); // Level 1
     }
 
     public void openScope() {
@@ -32,6 +32,13 @@ public class ScopedIdentification {
     public void addDeclaration(String identifier, Declaration declaration) {
         try {
             stack.peek().addDeclaration(identifier, declaration);
+        } catch (Exception e) {
+            _errors.reportError("IdentificationError: Identifier already exists at level: " + level);
+        }
+    }
+    public void addClassDeclaration(String identifier, Declaration declaration) {
+        try {
+            stack.peekLast().addDeclaration(identifier, declaration);
         } catch (Exception e) {
             _errors.reportError("IdentificationError: Identifier already exists at level: " + level);
         }

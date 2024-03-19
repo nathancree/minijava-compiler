@@ -12,7 +12,7 @@ public class Identification implements Visitor<Object,Object> {
         this._errors = errors;
         si = new ScopedIdentification(_errors);
         try {
-//            si.addDeclaration("System", new ClassDecl());
+            // TODO: Add predefined classes
         } catch (Exception e) {
             _errors.reportError("Error \"" + e + "\" when adding predefined declarations");
         }
@@ -29,16 +29,21 @@ public class Identification implements Visitor<Object,Object> {
     public Object visitPackage(Package prog, Object arg) throws IdentificationError {
         ClassDeclList cl = prog.classDeclList;
         for (ClassDecl c: prog.classDeclList) {
-            si.addDeclaration(c.name + c.name, c); // add classes to level 0
-        }
-        si.openScope(); // add level 1
-        for (ClassDecl c: prog.classDeclList){
+            si.addClassDeclaration(c.name + c.name, c); // add all classes to level 0
+            // add all public fields and methods to level 1
             for (FieldDecl fd : c.fieldDeclList) {
-                // TODO: add all public
+                if (!fd.isPrivate) {
+                    si.addDeclaration(c.name + fd.name, fd);
+                }
             }
             for (MethodDecl md : c.methodDeclList) {
-                // TODO: add all public
+                if (!md.isPrivate) {
+                    si.addDeclaration(c.name + md.name, md);
+                }
             }
+        }
+        // Starting actually visiting each class
+        for (ClassDecl c: prog.classDeclList){
             c.visit(this, "");
         }
 //        throw new IdentificationError("Not yet implemented!");
