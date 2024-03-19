@@ -2,6 +2,7 @@ package miniJava;
 
 import miniJava.AbstractSyntaxTrees.AST;
 import miniJava.AbstractSyntaxTrees.ASTDisplay;
+import miniJava.ContextualAnalysis.Identification;
 import miniJava.SyntacticAnalyzer.Parser;
 import miniJava.SyntacticAnalyzer.Scanner;
 
@@ -40,10 +41,12 @@ public class Compiler {
       System.out.println("Error");
       errorReports.outputErrors();
     } else {
+      // TODO: If there are no errors, println("Success")
+      Identification id = new Identification(errorReports);
+      System.out.println("Success");
       ASTDisplay display = new ASTDisplay();
       display.showTree(ast);
     }
 
-    // TODO: If there are no errors, println("Success")
   }
 }
