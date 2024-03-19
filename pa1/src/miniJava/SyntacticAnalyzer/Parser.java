@@ -69,14 +69,12 @@ public class Parser {
     accept(TokenType.RCURLY);
     return new ClassDecl(cn, fdl, mdl, null);
   }
-  //TODO:
   private FieldDecl parseFieldDeclaration() throws SyntaxError {
     parseType();
     accept(TokenType.IDENTIFIER);
     accept(TokenType.SEMICOLON);
     return null;
   }
-  //TODO:
   private MethodDecl parseMethodDeclaration(FieldDecl fieldDecl, boolean isPrivate, boolean isStatic) throws SyntaxError {
     FieldDecl fd = fieldDecl;
     ParameterDeclList paraml = new ParameterDeclList();
@@ -341,7 +339,6 @@ public class Parser {
         Expression expr = parseExpression();
 //        return new BinaryExpr(op, new RefExpr(ref, null), expr, null);
         if (expr instanceof BinaryExpr) {
-//          finalExpr = new BinaryExpr(((BinaryExpr) expr).operator, new UnaryExpr(op, ((BinaryExpr) expr).left, null), ((BinaryExpr) expr).right, null);
           finalExpr = new BinaryExpr(((BinaryExpr) expr).operator, new BinaryExpr(op, new RefExpr(ref, null), ((BinaryExpr) expr).left, null), ((BinaryExpr) expr).right, null);
         } else {
           finalExpr = new BinaryExpr(op, new RefExpr(ref, null), expr, null);
@@ -382,7 +379,6 @@ public class Parser {
         Expression expr = parseExpression();
 //        return new BinaryExpr(op, expr0, expr, null);
         if (expr instanceof BinaryExpr) {
-//          finalExpr = new BinaryExpr(((BinaryExpr) expr).operator, new UnaryExpr(op, ((BinaryExpr) expr).left, null), ((BinaryExpr) expr).right, null);
           finalExpr = new BinaryExpr(((BinaryExpr) expr).operator, new BinaryExpr(op, expr0, ((BinaryExpr) expr).left, null), ((BinaryExpr) expr).right, null);
         } else {
           finalExpr = new BinaryExpr(op, expr0, expr, null);
@@ -431,8 +427,6 @@ public class Parser {
       Operator op = new Operator(_currentToken);
       accept(TokenType.OPERATOR);
       Expression expr = parseExpression();
-//      return new BinaryExpr(op, finalExpr, expr, null); //TODO: WARNING THIS AINT RIGHT
-
       finalExpr = new BinaryExpr(op, finalExpr, expr, null);
 
     }

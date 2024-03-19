@@ -12,9 +12,15 @@ public class Identifier extends Terminal {
   public Identifier (Token t) {
     super (t);
   }
+  public Identifier (Token t, Declaration d) {
+    super (t);
+    decl = d;
+  }
 
   public <A,R> R visit(Visitor<A,R> v, A o) {
       return v.visitIdentifier(this, o);
   }
+
+  public Declaration decl;
 
 }
