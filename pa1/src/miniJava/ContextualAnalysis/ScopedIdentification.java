@@ -28,12 +28,29 @@ public class ScopedIdentification {
         level--;
     }
 
-    // TODO: Does not check all tables that have a level of 2+
     public void addDeclaration(String identifier, Declaration declaration) {
         try {
             stack.peek().addDeclaration(identifier, declaration);
-        } catch (Exception e) {
+            check2PlusLevel(identifier);
+        } catch (Exception e) { // TODO: Change Exception to IdentificationError
             _errors.reportError("IdentificationError: Identifier already exists at level: " + level);
+        }
+    }
+
+    private void check2PlusLevel(String identifier) throws Exception{
+        if (level > 2) {
+            Deque<IDTable> temp = new ArrayDeque<>();
+            temp.push(stack.pop());
+            while (level > 1) {
+                level--;
+                if (stack.peek().findDeclaration(identifier) != null) {
+                    throw new Exception();
+                }
+                temp.push(stack.pop());
+            }
+            for (IDTable idt : temp) {
+                stack.push(temp.pop());
+            }
         }
     }
     public void addClassDeclaration(String identifier, Declaration declaration) {
