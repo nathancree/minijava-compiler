@@ -191,14 +191,9 @@ public class Identification implements Visitor<Object,Object> {
     @Override
     public Object visitIfStmt(IfStmt stmt, Object arg){
         stmt.cond.visit(this, "");
-        // TODO: Check if need these scopes because block statement takes care of is?
-//        si.openScope(); // level 2+?
         stmt.thenStmt.visit(this, "");
-//        si.closeScope();
         if (stmt.elseStmt != null)
-//            si.openScope();
             stmt.elseStmt.visit(this, "");
-//            si.closeScope();
         return null;
     }
     @Override
@@ -281,9 +276,8 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitQRef(QualRef qr, Object arg) {
-
-        qr.id.visit(this, "");
         qr.ref.visit(this, "");
+        qr.id.visit(this, "");
         return null;
     }
 

@@ -48,7 +48,6 @@ public enum TokenType {
     SEMICOLON,
     EQUALS,
     OPERATOR,
-
     INTLITERAL,
     BOOLEANLITERAL,
     EOT

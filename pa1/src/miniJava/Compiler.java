@@ -4,6 +4,7 @@ import miniJava.AbstractSyntaxTrees.AST;
 import miniJava.AbstractSyntaxTrees.ASTDisplay;
 import miniJava.AbstractSyntaxTrees.Package;
 import miniJava.ContextualAnalysis.Identification;
+import miniJava.ContextualAnalysis.TypeChecking;
 import miniJava.SyntacticAnalyzer.Parser;
 import miniJava.SyntacticAnalyzer.Scanner;
 
@@ -35,9 +36,11 @@ public class Compiler {
 
     // TODO: Call the parser's parse function
 //    AST ast = parser.parse();
-    Package pack = parser.parse();
-    Identification id = new Identification(errorReports, pack);
-    id.parse(pack);
+    Package prog = parser.parse();
+    Identification identification = new Identification(errorReports, prog);
+    identification.parse(prog);
+    TypeChecking typeChecker = new TypeChecking(errorReports);
+    typeChecker.parse(prog);
 
     // TODO: Check if any errors exist, if so, println("Error")
     //  then output the errors
