@@ -8,9 +8,9 @@ public class Identification implements Visitor<Object,Object> {
     private ErrorReporter _errors;
     private ScopedIdentification si;
 
-    public Identification(ErrorReporter errors) {
+    public Identification(ErrorReporter errors, Package _package) {
         this._errors = errors;
-        si = new ScopedIdentification(_errors);
+        si = new ScopedIdentification(_errors, _package.classDeclList);
         try {
             // TODO: Add predefined classes
         } catch (Exception e) {
@@ -294,12 +294,12 @@ public class Identification implements Visitor<Object,Object> {
     //
     ///////////////////////////////////////////////////////////////////////////////
     @Override
-    public Object visitIdentifier(Identifier id, Object arg){
+    public Object visitIdentifier(Identifier id, Object arg) {
         if (si.findDeclaration(id) == null) {
-            // TODO: throw iderror
-        } else {
-            id.setDeclaration(si.findDeclaration(id));
-        }
+            _errors.reportError("IdentifierError: No declaration made for id \"" + id.getName() + "\"");
+        } //else {
+//            id.setDeclaration(si.findDeclaration(id));
+//        }
         return null;
     }
     @Override

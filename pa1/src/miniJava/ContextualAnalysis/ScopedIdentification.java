@@ -9,9 +9,11 @@ public class ScopedIdentification {
     private Deque<IDTable> stack;
     private int level;
     private ErrorReporter _errors;
+    private ClassDeclList classList;
 
-    public ScopedIdentification(ErrorReporter errors) {
+    public ScopedIdentification(ErrorReporter errors, ClassDeclList classList) {
         this._errors = errors;
+        this.classList = classList;
         this.stack = new ArrayDeque<>();
         this.stack.push(new IDTable()); // Level 0
         this.level = 1; // Might not actually need this
@@ -63,12 +65,15 @@ public class ScopedIdentification {
 
     public Declaration findDeclaration(Identifier identifier) {
         for (IDTable idTable : stack) {
-            Declaration declaration = idTable.findDeclaration(identifier.getClass().getName() + identifier.getName());
-//            if (declaration != null) {
-//                identifier.declaration = declaration;
-//                return declaration;
-//            }
-            return declaration;
+            // try the identifier with every single class (hell yea brute force)
+            Declaration declaration;
+            for (ClassDecl c : classList) {
+                declaration = idTable.findDeclaration(c.name + identifier.getName());
+                if (declaration != null) {
+                identifier.setDeclaration(declaration);
+                    return declaration;
+                }
+            }
         }
         return null;
     }

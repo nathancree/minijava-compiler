@@ -36,7 +36,7 @@ public class Compiler {
     // TODO: Call the parser's parse function
 //    AST ast = parser.parse();
     Package pack = parser.parse();
-    Identification id = new Identification(errorReports);
+    Identification id = new Identification(errorReports, pack);
     id.parse(pack);
 
     // TODO: Check if any errors exist, if so, println("Error")
