@@ -39,19 +39,24 @@ public class Compiler {
     Package prog = parser.parse();
     Identification identification = new Identification(errorReports, prog);
     identification.parse(prog);
-    TypeChecking typeChecker = new TypeChecking(errorReports);
-    typeChecker.parse(prog);
-
-    // TODO: Check if any errors exist, if so, println("Error")
-    //  then output the errors
     if (errorReports.hasErrors()) {
       System.out.println("Error");
       errorReports.outputErrors();
     } else {
+      TypeChecking typeChecker = new TypeChecking(errorReports);
+      typeChecker.parse(prog);
 
-      System.out.println("Success");
-//      ASTDisplay display = new ASTDisplay();
-//      display.showTree(ast);
+      // TODO: Check if any errors exist, if so, println("Error")
+      //  then output the errors
+      if (errorReports.hasErrors()) {
+        System.out.println("Error");
+        errorReports.outputErrors();
+      } else {
+
+        System.out.println("Success");
+        //      ASTDisplay display = new ASTDisplay();
+        //      display.showTree(ast);
+      }
     }
 
   }
