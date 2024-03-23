@@ -222,7 +222,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     ie.ixExpr.visit(this, null);
     return null;
   }
-
+  // TODO: Lots to do in visitCallExpr
   public TypeDenoter visitCallExpr(CallExpr expr, Object o){
     expr.functionRef.visit(this, null);
     for (Expression e: expr.argList) {

@@ -3,6 +3,8 @@ package miniJava.ContextualAnalysis;
 import miniJava.ErrorReporter;
 import miniJava.AbstractSyntaxTrees.Package;
 import miniJava.AbstractSyntaxTrees.*;
+import miniJava.SyntacticAnalyzer.Token;
+import miniJava.SyntacticAnalyzer.TokenType;
 
 public class Identification implements Visitor<Object,Object> {
     private ErrorReporter _errors;
@@ -12,10 +14,34 @@ public class Identification implements Visitor<Object,Object> {
         this._errors = errors;
         si = new ScopedIdentification(_errors, _package.classDeclList);
         try {
-            // TODO: Add predefined classes
+            addPredefinedClasses();
         } catch (Exception e) {
-            _errors.reportError("Error \"" + e + "\" when adding predefined declarations");
+            _errors.reportError("IdentificationError: \"" + e + "\" when adding predefined declarations");
         }
+    }
+
+    private void addPredefinedClasses() {  // MARK: Make sure we are adding correct class names? Should it only be singular or keep double like rest of convention?
+        // Manually add _PrintStream, and it's method (_println)
+        MethodDeclList mdl = new MethodDeclList();
+        FieldDecl md = new FieldDecl(false, false, new BaseType(TypeKind.VOID, null),"println", null);
+        ParameterDeclList pdl = new ParameterDeclList();
+        ParameterDecl pd = new ParameterDecl(new BaseType(TypeKind.INT, null), "n", null);
+        pdl.add(pd);
+        MethodDecl printStreamMethod = new MethodDecl(md, pdl, new StatementList(), null);
+        mdl.add(printStreamMethod);
+        ClassDecl printStream = new ClassDecl("_PrintStream", new FieldDeclList(), mdl, null);
+        si.addClassDeclaration(printStream.name + printStream.name, printStream);
+
+        // Manually add System and its field (out)
+        FieldDeclList systemFdl = new FieldDeclList();
+        FieldDecl systemField = new FieldDecl(false, true, new ClassType(new Identifier(new Token(TokenType.CLASS, "_PrintStream"), null), null), "out", null);
+        systemFdl.add(systemField);
+        ClassDecl system = new ClassDecl("System", systemFdl, new MethodDeclList(), null);
+        si.addClassDeclaration(system.name + system.name, system);
+
+        // Manually add String class
+        ClassDecl stringCls = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), null);
+        si.addClassDeclaration(stringCls.name + stringCls.name, stringCls);
     }
 
     public void parse( Package prog ) {

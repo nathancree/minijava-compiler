@@ -68,11 +68,13 @@ public class ScopedIdentification {
             // try the identifier with every single class (hell yea brute force)
             Declaration declaration;
             for (ClassDecl c : classList) {
-                declaration = idTable.findDeclaration(c.name + identifier.getName());
-                if (declaration != null) {
-                identifier.setDeclaration(declaration);
-                    return declaration;
-                }
+//                if (c.name != identifier.getName()) { // Checks for vars w same name as class
+                    declaration = idTable.findDeclaration(c.name + identifier.getName());
+                    if (declaration != null) {
+                        identifier.setDeclaration(declaration);
+                        return declaration;
+                    }
+//                }
             }
         }
         return null;
