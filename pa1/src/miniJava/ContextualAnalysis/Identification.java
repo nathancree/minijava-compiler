@@ -72,11 +72,12 @@ public class Identification implements Visitor<Object,Object> {
                 }
             }
         }
-        si.closeScope();
       // Starting actually visiting each class
       for (ClassDecl c : prog.classDeclList) {
             c.visit(this, arg);
-        }
+      }
+
+        si.closeScope();
 //        throw new IdentificationError("Not yet implemented!");
         return null;
     }
