@@ -93,7 +93,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     return type;
   }
 
-  // TODO: visit error and unsorported and void type??
+  // TODO: visit error and unsupported and void type??
 
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -130,7 +130,6 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   }
 
   public TypeDenoter visitIxAssignStmt(IxAssignStmt stmt, Object o){
-    // TODO: Thing on left should be arrayType (perhaps)
     TypeDenoter refTD = stmt.ref.visit(this, o);
     TypeDenoter ixTD = stmt.ix.visit(this, o);
     TypeDenoter exprTD = stmt.exp.visit(this, o);
@@ -142,22 +141,36 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
       _errors.reportError("TypeChecking Error: visitIxAssignStmt");
 
     }
-//    if ((ArrayType) refTD != exprTD.typeKind) {
-//      //TODO: Report error
-//      _errors.reportError("TypeChecking Error: visitIxAssignStmt");
-//    }
-//
-//    if (refTD instanceof ArrayType) {
-//      ArrayType refArrayTD = refTD;
-//
-//    }
+    assert refTD instanceof ArrayType;
+    if (((ArrayType) refTD).eltType.typeKind != exprTD.typeKind) {
+      //TODO: Report error
+      _errors.reportError("TypeChecking Error: visitIxAssignStmt");
+    }
     return null;
   }
   // TODO: check parameters to what is required by the method being called
   public TypeDenoter visitCallStmt(CallStmt stmt, Object o){
     stmt.methodRef.visit(this, o);
-    for (Expression e: stmt.argList) {
-      e.visit(this, o);
+
+    // TODO: Fix Error Reporting
+    Reference refExpr = stmt.methodRef;
+    refExpr.visit(this, o);
+    if (refExpr.declaration instanceof MethodDecl) {
+      MethodDecl md = (MethodDecl) refExpr.declaration;
+      ParameterDeclList paramDeclList = md.parameterDeclList;
+
+      if (paramDeclList.size() != stmt.argList.size()) {
+        _errors.reportError("TypeChecking Error: visitCallStmt");
+      }
+      int i = 0;
+      for (Expression e: stmt.argList) {
+        TypeDenoter argTD = e.visit(this, o);
+        if (argTD.typeKind != paramDeclList.get(i).type.typeKind) {
+          _errors.reportError("TypeChecking Error: visitCallStmt");
+        }
+        i++;
+      }
+
     }
     return null;
   }
@@ -255,23 +268,45 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   }
 
   public TypeDenoter visitIxExpr(IxExpr ie, Object o){
-    // TODO: Thing on left should be arrayType
-    ie.ref.visit(this, o);
-    ie.ixExpr.visit(this, o);
+    //TODO: Change errors to reflect actual errors better
+    TypeDenoter refTD = ie.ref.visit(this, o);
+    if (refTD.typeKind != TypeKind.ARRAY) {
+      _errors.reportError("TypeChecking Error: visitIxExpr");
+    }
+    TypeDenoter ixTD = ie.ixExpr.visit(this, o);
+    if (refTD.typeKind != TypeKind.INT) {
+      _errors.reportError("TypeChecking Error: visitIxExpr");
+    }
     return null;
   }
-  // TODO: Lots to do in visitCallExpr
-  public TypeDenoter visitCallExpr(CallExpr expr, Object o){
-    expr.functionRef.visit(this, o);
-    for (Expression e: expr.argList) {
-      e.visit(this, o);
+  public TypeDenoter visitCallExpr(CallExpr expr, Object o) {
+    // TODO: Fix Error Reporting
+    Reference refExpr = expr.functionRef;
+    ExprList exprList = expr.argList;
+    refExpr.visit(this, o);
+    if (refExpr.declaration instanceof MethodDecl) {
+      MethodDecl md = (MethodDecl) refExpr.declaration;
+      ParameterDeclList paramDeclList = md.parameterDeclList;
+
+      if (paramDeclList.size() != exprList.size()) {
+        _errors.reportError("TypeChecking Error: visitCallExpr");
+      }
+      int i = 0;
+      for (Expression e: exprList) {
+        TypeDenoter argTD = e.visit(this, o);
+        if (argTD.typeKind != paramDeclList.get(i).type.typeKind) {
+          _errors.reportError("TypeChecking Error: visitCallExpr");
+        }
+        i++;
+      }
+
     }
+
     return null;
   }
 
   public TypeDenoter visitLiteralExpr(LiteralExpr expr, Object o){
     return expr.lit.visit(this, o);
-//    return null;
   }
 
   //TODO: Check below method out
@@ -283,7 +318,6 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 
   public TypeDenoter visitNewObjectExpr(NewObjectExpr expr, Object o){
     return expr.classtype.visit(this, o);
-//    return null;
   }
 
 
@@ -303,9 +337,14 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   }
 
   public TypeDenoter visitQRef(QualRef qr, Object o) {
-    TypeDenoter tdRef = qr.ref.visit(this, o); // TODO: keep workin here bud
+    TypeDenoter qualTD = qr.ref.visit(this, o);
+    if (qr.ref instanceof ThisRef|| qr.ref.declaration instanceof MethodDecl) {
+      _errors.reportError("TypeChecking Error: visitQRef");
+    } else if (qualTD.typeKind == TypeKind.CLASS) {
+      // TODO: keep workin here bud
+    }
     qr.id.visit(this, o);
-    return null;
+    return qualTD;
   }
 
 
