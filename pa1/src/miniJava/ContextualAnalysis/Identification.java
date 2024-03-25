@@ -30,18 +30,18 @@ public class Identification implements Visitor<Object,Object> {
         MethodDecl printStreamMethod = new MethodDecl(md, pdl, new StatementList(), null);
         mdl.add(printStreamMethod);
         ClassDecl printStream = new ClassDecl("_PrintStream", new FieldDeclList(), mdl, null);
-        si.addClassDeclaration(printStream.name + printStream.name, printStream);
+        si.addClassDeclaration(printStream.name, printStream);
 
         // Manually add System and its field (out)
         FieldDeclList systemFdl = new FieldDeclList();
         FieldDecl systemField = new FieldDecl(false, true, new ClassType(new Identifier(new Token(TokenType.CLASS, "_PrintStream"), null), null), "out", null);
         systemFdl.add(systemField);
         ClassDecl system = new ClassDecl("System", systemFdl, new MethodDeclList(), null);
-        si.addClassDeclaration(system.name + system.name, system);
+        si.addClassDeclaration(system.name, system);
 
         // Manually add String class
         ClassDecl stringCls = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), null);
-        si.addClassDeclaration(stringCls.name + stringCls.name, stringCls);
+        si.addClassDeclaration(stringCls.name, stringCls);
         visitIdentifier(new Identifier(new Token(TokenType.IDENTIFIER, "String")), stringCls);
     }
 
@@ -129,8 +129,14 @@ public class Identification implements Visitor<Object,Object> {
         m.type.visit(this, arg);
         ParameterDeclList pdl = m.parameterDeclList;
 //        si.openScope();
+
         for (ParameterDecl pd: pdl) {
-            pd.visit(this, arg);
+            if (pd.type.typeKind == TypeKind.CLASS) {
+                pd.type.visit(this, arg);
+                si.addDeclaration(pd.name, pd);
+            } else {
+                pd.visit(this, arg);
+            }
         }
         StatementList sl = m.statementList;
         for (Statement s: sl) {
@@ -166,7 +172,12 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitClassType(ClassType ct, Object arg){
-        ct.className.visit(this, arg);
+//        ct.className.visit(this, arg);
+        if (si.findClassDeclaration(ct.className) == null) {
+            _errors.reportError("IdentifierError: ID \"" + ct.className.getName() + "\" requires type CLASS and cannot be found.");
+        } //else {
+//            id.setDeclaration(si.findDeclaration(id));
+//        }
         return null;
     }
     @Override

@@ -65,9 +65,19 @@ public class ScopedIdentification {
             _errors.reportError("IdentificationError: Identifier already exists at level: " + level);
         }
     }
+    public Declaration findClassDeclaration(Identifier identifier) {
+        Declaration declaration = stack.peekLast().findDeclaration(identifier.getName());
+        if (declaration != null) {
+            identifier.setDeclaration(declaration);
+            return declaration;
+        }
+        return null;
+    }
 
     public Declaration findDeclaration(Identifier identifier, ClassDecl clas) {
-        Declaration declaration = stack.peekLast().findDeclaration(identifier.getName());
+//        Declaration declaration = stack.peekLast().findDeclaration(identifier.getName());
+        Declaration declaration = findClassDeclaration(identifier);
+
         //first check if identifier is a class
         if (declaration != null) {
             identifier.setDeclaration(declaration);
