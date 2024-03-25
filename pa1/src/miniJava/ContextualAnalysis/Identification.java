@@ -122,6 +122,7 @@ public class Identification implements Visitor<Object,Object> {
     public Object visitMethodDecl(MethodDecl m, Object arg){
         m.type.visit(this, arg);
         ParameterDeclList pdl = m.parameterDeclList;
+//        si.openScope();
         for (ParameterDecl pd: pdl) {
             pd.visit(this, arg);
         }
@@ -129,17 +130,20 @@ public class Identification implements Visitor<Object,Object> {
         for (Statement s: sl) {
             s.visit(this, arg);
         }
+//        si.closeScope();
         return null;
     }
     @Override
     public Object visitParameterDecl(ParameterDecl pd, Object arg){
-        si.addDeclaration(pd.getClass().getName() + pd.name, pd);
+        assert arg instanceof ClassDecl;
+        si.addDeclaration(((ClassDecl) arg).name + pd.name, pd);
         pd.type.visit(this, arg);
         return null;
     }
     @Override
     public Object visitVarDecl(VarDecl vd, Object arg){
-        si.addDeclaration(vd.getClass().getName() + vd.name, vd);
+        assert arg instanceof ClassDecl;
+        si.addDeclaration(((ClassDecl) arg).name + vd.name, vd);
         vd.type.visit(this, arg);
         return null;
     }

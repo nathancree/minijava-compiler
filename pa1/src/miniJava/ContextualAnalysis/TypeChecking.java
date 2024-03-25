@@ -152,7 +152,11 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   }
   // TODO: check parameters to what is required by the method being called
   public TypeDenoter visitCallStmt(CallStmt stmt, Object o){
+    if (stmt.methodRef instanceof ThisRef) {
+      _errors.reportError("\"thisRef\" cannot be a method reference");
+    }
     TypeDenoter td = stmt.methodRef.visit(this, o);
+
 
     // TODO: Fix Error Reporting
     Reference refExpr = stmt.methodRef;
@@ -330,7 +334,10 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   ///////////////////////////////////////////////////////////////////////////////
 
   public TypeDenoter visitThisRef(ThisRef ref, Object o) {
-    return ref.declaration.type;
+    // TODO: THIS SUCKS
+//    assert o instanceof ClassDecl;
+//    return (TypeDenoter) o;
+    return null;
   }
 
   public TypeDenoter visitIdRef(IdRef ref, Object o) {

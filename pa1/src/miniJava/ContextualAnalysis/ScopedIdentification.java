@@ -35,23 +35,26 @@ public class ScopedIdentification {
             stack.peek().addDeclaration(identifier, declaration);
             check2PlusLevel(identifier);
         } catch (Exception e) { // TODO: Change Exception to IdentificationError
-            _errors.reportError("IdentificationError: Identifier already exists at level: " + level);
+            _errors.reportError("IdentificationError: Identifier \"" + identifier + "\" already exists at level: " + level);
         }
     }
 
     private void check2PlusLevel(String identifier) throws Exception{
-        if (level > 2) {
+        if (level >= 2) {
             Deque<IDTable> temp = new ArrayDeque<>();
             temp.push(stack.pop());
+            level--;
             while (level > 1) {
                 level--;
                 if (stack.peek().findDeclaration(identifier) != null) {
+                    level ++;
                     throw new Exception();
                 }
                 temp.push(stack.pop());
             }
             for (IDTable idt : temp) {
                 stack.push(temp.pop());
+                level++;
             }
         }
     }
