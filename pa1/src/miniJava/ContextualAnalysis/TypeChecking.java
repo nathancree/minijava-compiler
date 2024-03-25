@@ -50,13 +50,25 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   }
 
   public TypeDenoter visitMethodDecl(MethodDecl m, Object o){
-    m.type.visit(this, o);
+    TypeDenoter methodTypeTD = m.type.visit(this, o);
+    if (methodTypeTD.typeKind == TypeKind.VOID) {
+
+    }
     for (ParameterDecl pd: m.parameterDeclList) {
       pd.visit(this, o);
     }
     StatementList sl = m.statementList;
     for (Statement s: sl) {
-      s.visit(this, o);
+      if (s instanceof ReturnStmt) {
+        TypeDenoter returnTD = s.visit(this, o);
+        if (methodTypeTD.typeKind == TypeKind.VOID) {
+          _errors.reportError("TypeChecking Error: Return type of \"" + returnTD.typeKind + "\" for void method");
+        } else if (returnTD != methodTypeTD) {
+          _errors.reportError("TypeChecking Error: Method requires return type \"" + methodTypeTD.typeKind + "\" but got \"" + returnTD.typeKind + "\"");
+        }
+      } else {
+        s.visit(this, o);
+      }
     }
     return null;
   }
