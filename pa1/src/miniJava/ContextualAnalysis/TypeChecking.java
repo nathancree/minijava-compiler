@@ -62,8 +62,9 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   }
 
   public TypeDenoter visitParameterDecl(ParameterDecl pd, Object o){
-    if (pd.type.typeKind == TypeKind.VOID) {
-      //TODO: Error pd cannot be void type
+    if (pd.type.typeKind == TypeKind.VOID || pd.type.typeKind == TypeKind.CLASS) {
+      //TODO: Make a better error sign
+      _errors.reportError("TypeChecking Error: visitParameterDecl");
     }
     return pd.type.visit(this, o);
   }
@@ -126,7 +127,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     if (refTD.typeKind != valTD.typeKind) {
       _errors.reportError("TypeChecking Error: Attempting to assign \"" + valTD.typeKind + "\" to reference of type \"" + refTD.typeKind + "\"");
     }
-    return null;
+    return refTD;
   }
 
   public TypeDenoter visitIxAssignStmt(IxAssignStmt stmt, Object o){
@@ -146,11 +147,11 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
       //TODO: Report error
       _errors.reportError("TypeChecking Error: visitIxAssignStmt");
     }
-    return null;
+    return refTD;
   }
   // TODO: check parameters to what is required by the method being called
   public TypeDenoter visitCallStmt(CallStmt stmt, Object o){
-    stmt.methodRef.visit(this, o);
+    TypeDenoter td = stmt.methodRef.visit(this, o);
 
     // TODO: Fix Error Reporting
     Reference refExpr = stmt.methodRef;
@@ -172,7 +173,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
       }
 
     }
-    return null;
+    return td;
   }
 
   public TypeDenoter visitReturnStmt(ReturnStmt stmt, Object o){
@@ -277,13 +278,13 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     if (refTD.typeKind != TypeKind.INT) {
       _errors.reportError("TypeChecking Error: visitIxExpr");
     }
-    return null;
+    return refTD;
   }
   public TypeDenoter visitCallExpr(CallExpr expr, Object o) {
     // TODO: Fix Error Reporting
     Reference refExpr = expr.functionRef;
     ExprList exprList = expr.argList;
-    refExpr.visit(this, o);
+    TypeDenoter td = refExpr.visit(this, o);
     if (refExpr.declaration instanceof MethodDecl) {
       MethodDecl md = (MethodDecl) refExpr.declaration;
       ParameterDeclList paramDeclList = md.parameterDeclList;
@@ -302,7 +303,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 
     }
 
-    return null;
+    return td;
   }
 
   public TypeDenoter visitLiteralExpr(LiteralExpr expr, Object o){
