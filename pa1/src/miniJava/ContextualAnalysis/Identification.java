@@ -77,7 +77,6 @@ public class Identification implements Visitor<Object,Object> {
             c.visit(this, arg);
       }
 
-        si.closeScope();
 //        throw new IdentificationError("Not yet implemented!");
         return null;
     }

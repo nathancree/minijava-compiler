@@ -79,7 +79,7 @@ public class ScopedIdentification {
         Declaration declaration = findClassDeclaration(identifier);
 
         //first check if identifier is a class
-        if (declaration != null) {
+        if (declaration != null && level < 2) {
             identifier.setDeclaration(declaration);
             return declaration;
         }

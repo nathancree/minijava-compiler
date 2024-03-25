@@ -380,7 +380,8 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   ///////////////////////////////////////////////////////////////////////////////
 
   public TypeDenoter visitIdentifier(Identifier id, Object o){
-    return id.getDeclaration().type;
+    TypeDenoter td = id.getDeclaration().type;
+    return td;
   }
 
   public TypeDenoter visitOperator(Operator op, Object o){
