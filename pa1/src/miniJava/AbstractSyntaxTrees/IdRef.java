@@ -12,6 +12,7 @@ public class IdRef extends BaseRef {
 	public IdRef(Identifier id, SourcePosition posn){
 		super(posn);
 		this.id = id;
+		declaration = id.getDeclaration();
 	}
 		
 	public <A,R> R visit(Visitor<A,R> v, A o) {

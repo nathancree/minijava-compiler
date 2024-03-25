@@ -63,18 +63,23 @@ public class ScopedIdentification {
         }
     }
 
-    public Declaration findDeclaration(Identifier identifier) {
+    public Declaration findDeclaration(Identifier identifier, ClassDecl clas) {
         for (IDTable idTable : stack) {
             // try the identifier with every single class (hell yea brute force)
             Declaration declaration;
-            for (ClassDecl c : classList) {
-//                if (c.name != identifier.getName()) { // Checks for vars w same name as class
-                    declaration = idTable.findDeclaration(c.name + identifier.getName());
-                    if (declaration != null) {
-                        identifier.setDeclaration(declaration);
-                        return declaration;
-                    }
-//                }
+//            for (ClassDecl c : classList) {
+////                if (c.name != identifier.getName()) { // Checks for vars w same name as class
+//                    declaration = idTable.findDeclaration(c.name + identifier.getName());
+//                    if (declaration != null) {
+//                        identifier.setDeclaration(declaration);
+//                        return declaration;
+//                    }
+////                }
+//            }
+            declaration = idTable.findDeclaration(clas.name + identifier.getName());
+            if (declaration != null) {
+                identifier.setDeclaration(declaration);
+                return declaration;
             }
         }
         return null;
@@ -83,7 +88,7 @@ public class ScopedIdentification {
         try {
             stack.peek().delDeclaration(identifier, declaration);
         } catch (Exception e) {
-            _errors.reportError("IdentificationError: Identifier already exists at level: " + level);
+            _errors.reportError("IdentificationError: Identifier doesn't exists at level: " + level);
         }
     }
 }

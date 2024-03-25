@@ -70,7 +70,7 @@ public class Identification implements Visitor<Object,Object> {
         }
         // Starting actually visiting each class
         for (ClassDecl c: prog.classDeclList){
-            c.visit(this, "");
+            c.visit(this, arg);
         }
 //        throw new IdentificationError("Not yet implemented!");
         return null;
@@ -95,10 +95,10 @@ public class Identification implements Visitor<Object,Object> {
         }
         si.openScope(); // open level 2
         for (FieldDecl f : clas.fieldDeclList) {
-            f.visit(this, "");
+            f.visit(this, clas);
         }
         for (MethodDecl m : clas.methodDeclList) {
-            m.visit(this, "");
+            m.visit(this, clas);
         }
         si.closeScope(); // close level 2
         for (FieldDecl f : clas.fieldDeclList) {
@@ -115,32 +115,32 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitFieldDecl(FieldDecl f, Object arg){
-        f.type.visit(this, "");
+        f.type.visit(this, arg);
         return null;
     }
     @Override
     public Object visitMethodDecl(MethodDecl m, Object arg){
-        m.type.visit(this, "");
+        m.type.visit(this, arg);
         ParameterDeclList pdl = m.parameterDeclList;
         for (ParameterDecl pd: pdl) {
-            pd.visit(this, "");
+            pd.visit(this, arg);
         }
         StatementList sl = m.statementList;
         for (Statement s: sl) {
-            s.visit(this, "");
+            s.visit(this, arg);
         }
         return null;
     }
     @Override
     public Object visitParameterDecl(ParameterDecl pd, Object arg){
         si.addDeclaration(pd.getClass().getName() + pd.name, pd);
-        pd.type.visit(this, "");
+        pd.type.visit(this, arg);
         return null;
     }
     @Override
     public Object visitVarDecl(VarDecl vd, Object arg){
         si.addDeclaration(vd.getClass().getName() + vd.name, vd);
-        vd.type.visit(this, "");
+        vd.type.visit(this, arg);
         return null;
     }
 
@@ -156,12 +156,12 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitClassType(ClassType ct, Object arg){
-        ct.className.visit(this, "");
+        ct.className.visit(this, arg);
         return null;
     }
     @Override
     public Object visitArrayType(ArrayType type, Object arg){
-        type.eltType.visit(this, "");
+        type.eltType.visit(this, arg);
         return null;
     }
 
@@ -175,57 +175,57 @@ public class Identification implements Visitor<Object,Object> {
     public Object visitBlockStmt(BlockStmt stmt, Object arg){
         si.openScope();
         for (Statement s : stmt.sl) {
-            s.visit(this, "");
+            s.visit(this, arg);
         }
         si.closeScope();
         return null;
     }
     @Override
     public Object visitVardeclStmt(VarDeclStmt stmt, Object arg){
-        stmt.varDecl.visit(this, "");
-        stmt.initExp.visit(this, "");
+        stmt.varDecl.visit(this, arg);
+        stmt.initExp.visit(this, arg);
         return null;
     }
     @Override
     public Object visitAssignStmt(AssignStmt stmt, Object arg){
-        stmt.ref.visit(this, "");
-        stmt.val.visit(this, "");
+        stmt.ref.visit(this, arg);
+        stmt.val.visit(this, arg);
         return null;
     }
     @Override
     public Object visitIxAssignStmt(IxAssignStmt stmt, Object arg){
-        stmt.ref.visit(this, "");
-        stmt.ix.visit(this, "");
-        stmt.exp.visit(this, "");
+        stmt.ref.visit(this, arg);
+        stmt.ix.visit(this, arg);
+        stmt.exp.visit(this, arg);
         return null;
     }
     @Override
     public Object visitCallStmt(CallStmt stmt, Object arg){
-        stmt.methodRef.visit(this, "");
+        stmt.methodRef.visit(this, arg);
         ExprList al = stmt.argList;
         for (Expression e: al) {
-            e.visit(this, "");
+            e.visit(this, arg);
         }
         return null;
     }
     @Override
     public Object visitReturnStmt(ReturnStmt stmt, Object arg){
         if (stmt.returnExpr != null)
-            stmt.returnExpr.visit(this, "");
+            stmt.returnExpr.visit(this, arg);
         return null;
     }
     @Override
     public Object visitIfStmt(IfStmt stmt, Object arg){
-        stmt.cond.visit(this, "");
-        stmt.thenStmt.visit(this, "");
+        stmt.cond.visit(this, arg);
+        stmt.thenStmt.visit(this, arg);
         if (stmt.elseStmt != null)
-            stmt.elseStmt.visit(this, "");
+            stmt.elseStmt.visit(this, arg);
         return null;
     }
     @Override
     public Object visitWhileStmt(WhileStmt stmt, Object arg){
-        stmt.cond.visit(this, "");
-        stmt.body.visit(this, "");
+        stmt.cond.visit(this, arg);
+        stmt.body.visit(this, arg);
         return null;
     }
 
@@ -237,51 +237,51 @@ public class Identification implements Visitor<Object,Object> {
     ///////////////////////////////////////////////////////////////////////////////
     @Override
     public Object visitUnaryExpr(UnaryExpr expr, Object arg){
-        expr.operator.visit(this, "");
-        expr.expr.visit(this, "");
+        expr.operator.visit(this, arg);
+        expr.expr.visit(this, arg);
         return null;
     }
     @Override
     public Object visitBinaryExpr(BinaryExpr expr, Object arg){
-        expr.operator.visit(this, "");
-        expr.left.visit(this, "");
-        expr.right.visit(this, "");
+        expr.operator.visit(this, arg);
+        expr.left.visit(this, arg);
+        expr.right.visit(this, arg);
         return null;
     }
     @Override
     public Object visitRefExpr(RefExpr expr, Object arg){
-        expr.ref.visit(this, "");
+        expr.ref.visit(this, arg);
         return null;
     }
     @Override
     public Object visitIxExpr(IxExpr ie, Object arg){
-        ie.ref.visit(this, "");
-        ie.ixExpr.visit(this, "");
+        ie.ref.visit(this, arg);
+        ie.ixExpr.visit(this, arg);
         return null;
     }
     @Override
     public Object visitCallExpr(CallExpr expr, Object arg){
-        expr.functionRef.visit(this, "");
+        expr.functionRef.visit(this, arg);
         ExprList al = expr.argList;
         for (Expression e: al) {
-            e.visit(this, "");
+            e.visit(this, arg);
         }
         return null;
     }
     @Override
     public Object visitLiteralExpr(LiteralExpr expr, Object arg){
-        expr.lit.visit(this, "");
+        expr.lit.visit(this, arg);
         return null;
     }
     @Override
     public Object visitNewArrayExpr(NewArrayExpr expr, Object arg){
-        expr.eltType.visit(this, "");
-        expr.sizeExpr.visit(this, "");
+        expr.eltType.visit(this, arg);
+        expr.sizeExpr.visit(this, arg);
         return null;
     }
     @Override
     public Object visitNewObjectExpr(NewObjectExpr expr, Object arg){
-        expr.classtype.visit(this, "");
+        expr.classtype.visit(this, arg);
         return null;
     }
 
@@ -297,13 +297,13 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitIdRef(IdRef ref, Object arg) {
-        ref.id.visit(this, "");
+        ref.id.visit(this, arg);
         return null;
     }
     @Override
     public Object visitQRef(QualRef qr, Object arg) {
-        qr.ref.visit(this, "");
-        qr.id.visit(this, "");
+        qr.ref.visit(this, arg);
+        qr.id.visit(this, arg);
         return null;
     }
 
@@ -314,8 +314,8 @@ public class Identification implements Visitor<Object,Object> {
     //
     ///////////////////////////////////////////////////////////////////////////////
     @Override
-    public Object visitIdentifier(Identifier id, Object arg) {
-        if (si.findDeclaration(id) == null) {
+    public Object visitIdentifier(Identifier id, Object arg) { // wherever visitIdentifier is called pass Class context as arg and use that in findDeclaration
+        if (si.findDeclaration(id, (ClassDecl) arg) == null) {
             _errors.reportError("IdentifierError: No declaration made for id \"" + id.getName() + "\"");
         } //else {
 //            id.setDeclaration(si.findDeclaration(id));
