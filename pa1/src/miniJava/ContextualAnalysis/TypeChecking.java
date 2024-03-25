@@ -269,8 +269,12 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
       }
     } else if (tdLeft.typeKind == TypeKind.CLASS && tdRight.typeKind == TypeKind.CLASS
             && (operator.equals("==") || operator.equals("!="))) {
+      assert tdLeft instanceof ClassType;
+      assert tdRight instanceof ClassType;
+      if (!((ClassType) tdLeft).className.getName().equals(((ClassType) tdRight).className.getName())) {
+        _errors.reportError("Can't compare two classes of type \"" + ((ClassType) tdLeft).className.getName() + "\" and \"" + ((ClassType) tdRight).className.getName() + "\"");
+      }
       return new BaseType(TypeKind.BOOLEAN, null);
-
     } else if (tdLeft.typeKind == TypeKind.ERROR || tdRight.typeKind == TypeKind.ERROR) {
       // MARK: Don't need to report an error tho because it is already reported??
       return new BaseType(TypeKind.ERROR, null);
