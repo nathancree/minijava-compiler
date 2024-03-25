@@ -42,6 +42,7 @@ public class Identification implements Visitor<Object,Object> {
         // Manually add String class
         ClassDecl stringCls = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), null);
         si.addClassDeclaration(stringCls.name + stringCls.name, stringCls);
+        visitIdentifier(new Identifier(new Token(TokenType.IDENTIFIER, "String")), stringCls);
     }
 
     public void parse( Package prog ) {
@@ -55,7 +56,10 @@ public class Identification implements Visitor<Object,Object> {
     public Object visitPackage(Package prog, Object arg) throws IdentificationError {
         ClassDeclList cl = prog.classDeclList;
         for (ClassDecl c: prog.classDeclList) {
-            si.addClassDeclaration(c.name + c.name, c); // add all classes to level 0
+            si.addClassDeclaration(c.name, c); // add all classes to level 0
+        }
+        si.openScope();
+        for (ClassDecl c : prog.classDeclList) {
             // add all public fields and methods to level 1
             for (FieldDecl fd : c.fieldDeclList) {
                 if (!fd.isPrivate) {
@@ -68,8 +72,9 @@ public class Identification implements Visitor<Object,Object> {
                 }
             }
         }
-        // Starting actually visiting each class
-        for (ClassDecl c: prog.classDeclList){
+        si.closeScope();
+      // Starting actually visiting each class
+      for (ClassDecl c : prog.classDeclList) {
             c.visit(this, arg);
         }
 //        throw new IdentificationError("Not yet implemented!");

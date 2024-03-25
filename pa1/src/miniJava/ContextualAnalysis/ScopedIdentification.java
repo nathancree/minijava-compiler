@@ -67,9 +67,14 @@ public class ScopedIdentification {
     }
 
     public Declaration findDeclaration(Identifier identifier, ClassDecl clas) {
+        Declaration declaration = stack.peekLast().findDeclaration(identifier.getName());
+        //first check if identifier is a class
+        if (declaration != null) {
+            identifier.setDeclaration(declaration);
+            return declaration;
+        }
         for (IDTable idTable : stack) {
             // try the identifier with every single class (hell yea brute force)
-            Declaration declaration;
 //            for (ClassDecl c : classList) {
 ////                if (c.name != identifier.getName()) { // Checks for vars w same name as class
 //                    declaration = idTable.findDeclaration(c.name + identifier.getName());
@@ -79,10 +84,17 @@ public class ScopedIdentification {
 //                    }
 ////                }
 //            }
+
             declaration = idTable.findDeclaration(clas.name + identifier.getName());
             if (declaration != null) {
                 identifier.setDeclaration(declaration);
                 return declaration;
+            } else if (identifier.getName().equals("String")) {
+                declaration = idTable.findDeclaration("StringString");
+                if (declaration != null) {
+                    identifier.setDeclaration(declaration);
+                    return declaration;
+                }
             }
         }
         return null;
