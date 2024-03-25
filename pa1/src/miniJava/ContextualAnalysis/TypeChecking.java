@@ -62,7 +62,8 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   }
 
   public TypeDenoter visitParameterDecl(ParameterDecl pd, Object o){
-    if (pd.type.typeKind == TypeKind.VOID || pd.type.typeKind == TypeKind.CLASS) {
+    if (pd.type.typeKind == TypeKind.VOID) {
+//      if (pd.type.typeKind == TypeKind.VOID || pd.type.typeKind == TypeKind.CLASS) {
       //TODO: Make a better error sign
       _errors.reportError("TypeChecking Error: visitParameterDecl");
     }
