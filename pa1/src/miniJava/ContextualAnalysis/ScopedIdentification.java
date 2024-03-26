@@ -114,7 +114,7 @@ public class ScopedIdentification {
         try {
             stack.peek().delDeclaration(identifier, declaration);
         } catch (Exception e) {
-            _errors.reportError("IdentificationError: Identifier doesn't exists at level: " + level);
+            _errors.reportError("IdentificationError: Identifier \"" + identifier + "\" doesn't exist at level: " + level);
         }
     }
 }

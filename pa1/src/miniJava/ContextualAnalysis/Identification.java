@@ -67,7 +67,7 @@ public class Identification implements Visitor<Object,Object> {
         for (ClassDecl c: prog.classDeclList) {
             si.addClassDeclaration(c.name, c); // add all classes to level 0
         }
-        si.openScope();
+//        si.openScope();
         for (ClassDecl c : prog.classDeclList) {
             // add all public fields and methods to level 1
             for (FieldDecl fd : c.fieldDeclList) {
@@ -117,12 +117,20 @@ public class Identification implements Visitor<Object,Object> {
         si.closeScope(); // close level 2
         for (FieldDecl f : clas.fieldDeclList) {
             if (f.isPrivate) {
-                si.delDeclaration(className + f.name, f); // rem access to private fields
+                String tempfName = f.name;
+                if (tempfName.contains("-")) {
+                    tempfName = tempfName.replace("-", "");
+                }
+                si.delDeclaration(tempfName, f); // rem access to private fields
             }
         }
         for (MethodDecl m : clas.methodDeclList) {
             if (m.isPrivate) {
-                si.delDeclaration(className + m.name, m); // rem access to private methods
+                String tempmName = m.name;
+                if (tempmName.contains("-")) {
+                    tempmName = tempmName.replace("-", "");
+                }
+                si.delDeclaration(tempmName, m); // rem access to private methods
             }
         }
         return null;
