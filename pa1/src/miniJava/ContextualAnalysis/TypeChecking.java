@@ -168,7 +168,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 
     }
     assert refTD instanceof ArrayType;
-    if (((ArrayType) refTD).eltType.typeKind != exprTD.typeKind) {
+    if (((ArrayType) refTD).eltType.typeKind != ixTD.typeKind) {
       //TODO: Report error
       _errors.reportError("TypeChecking Error: visitIxAssignStmt");
     }
