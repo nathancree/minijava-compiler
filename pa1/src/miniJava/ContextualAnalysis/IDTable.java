@@ -13,7 +13,8 @@ public class IDTable {
     }
 
     public void addDeclaration(String identifier, Declaration declaration) throws Exception { //throws Identification.IdentificationError {
-        if (table.containsKey(identifier)) {
+        // TODO: This could cause some errors perhaps?? Look at this for sure
+        if (table.containsKey(identifier) && declaration.getClass() == table.get(identifier).getClass()) {
 //            throw new Identification.IdentificationError();
             throw new Exception();
         }

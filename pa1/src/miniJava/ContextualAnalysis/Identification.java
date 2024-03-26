@@ -118,7 +118,9 @@ public class Identification implements Visitor<Object,Object> {
         for (FieldDecl f : clas.fieldDeclList) {
             if (f.isPrivate) {
                 String tempfName = f.name;
-                if (tempfName.contains("-")) {
+                if (!tempfName.contains(className)) {
+                    tempfName = className + tempfName;
+                } else if (tempfName.contains("-")) {
                     tempfName = tempfName.replace("-", "");
                 }
                 si.delDeclaration(tempfName, f); // rem access to private fields
@@ -127,7 +129,9 @@ public class Identification implements Visitor<Object,Object> {
         for (MethodDecl m : clas.methodDeclList) {
             if (m.isPrivate) {
                 String tempmName = m.name;
-                if (tempmName.contains("-")) {
+                if (!tempmName.contains(className)) {
+                    tempmName = className + tempmName;
+                } else if (tempmName.contains("-")) {
                     tempmName = tempmName.replace("-", "");
                 }
                 si.delDeclaration(tempmName, m); // rem access to private methods
