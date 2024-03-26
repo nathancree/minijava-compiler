@@ -128,7 +128,11 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     if (stmt.initExp != null) {
       TypeDenoter exprTD = stmt.initExp.visit(this, o);
       if (varTD.typeKind != exprTD.typeKind) {
-        _errors.reportError("Type Checking Error: Attempting to assign \"" + exprTD.typeKind + "\" to \"" + varTD.typeKind + "\" var");
+        _errors.reportError("TypeChecking Error: Attempting to assign \"" + exprTD.typeKind + "\" to \"" + varTD.typeKind + "\" var");
+      } else {
+        if (varTD.typeKind == TypeKind.CLASS && !((ClassType) varTD).className.getName().equals(((ClassType) exprTD).className.getName())) { // if assigning class to class compare the names of classes
+          _errors.reportError("TypeChecking Error: Attempting to assign \""+ ((ClassType) exprTD).className.getName() + "\" type to \"" + ((ClassType) varTD).className.getName() + "\" type var");
+        }
       }
     }
     return null;
@@ -139,6 +143,10 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     TypeDenoter valTD = stmt.val.visit(this, o);
     if (refTD.typeKind != valTD.typeKind) {
       _errors.reportError("TypeChecking Error: Attempting to assign \"" + valTD.typeKind + "\" to reference of type \"" + refTD.typeKind + "\"");
+    } else if (stmt.val instanceof RefExpr) {
+      if (((RefExpr) stmt.val).ref instanceof IdRef && ((IdRef) ((RefExpr) stmt.val).ref).id.getDeclaration() instanceof MethodDecl) {
+        _errors.reportError("TypeChecking Error: ID should denote a field or a variable");
+      }
     }
     return refTD;
   }
@@ -377,6 +385,8 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
           _errors.reportError("TypeChecking Error: visitQRef2");
         }
       }
+    } else {
+      _errors.reportError("TypeChecking Error: visitQRef3");
     }
     return idTD;
   }
