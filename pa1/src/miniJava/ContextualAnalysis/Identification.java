@@ -31,6 +31,7 @@ public class Identification implements Visitor<Object,Object> {
         mdl.add(printStreamMethod);
         ClassDecl printStream = new ClassDecl("_PrintStream", new FieldDeclList(), mdl, null);
         si.addClassDeclaration(printStream.name, printStream);
+        si.addDeclaration(printStream.name + "println", printStreamMethod);
 
         // Manually add System and its field (out)
         FieldDeclList systemFdl = new FieldDeclList();
@@ -38,11 +39,19 @@ public class Identification implements Visitor<Object,Object> {
         systemFdl.add(systemField);
         ClassDecl system = new ClassDecl("System", systemFdl, new MethodDeclList(), null);
         si.addClassDeclaration(system.name, system);
+        si.addDeclaration(system.name + "out", systemField);
+
 
         // Manually add String class
         ClassDecl stringCls = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), null);
         si.addClassDeclaration(stringCls.name, stringCls);
-        visitIdentifier(new Identifier(new Token(TokenType.IDENTIFIER, "String")), stringCls);
+//        visitIdentifier(new Identifier(new Token(TokenType.IDENTIFIER, "String")), stringCls);
+
+        // Visit all the classes real quick
+        visitClassDecl(printStream, stringCls);
+        visitClassDecl(system, system);
+        visitClassDecl(stringCls, stringCls);
+
     }
 
     public void parse( Package prog ) {

@@ -308,6 +308,9 @@ public class Parser {
       Expression expr = parseExpression();
       accept(TokenType.RPAREN);
       Statement stmt = parseStatement();
+      if (_currentToken.getTokenType() != TokenType.LCURLY) {
+        _errors.reportError("Can't have single line while statements");
+      }
       return new WhileStmt(expr, stmt, null);
     } else {
       _errors.reportError("Expected a Statement, but got \"" + _currentToken.getTokenText() + "\"");

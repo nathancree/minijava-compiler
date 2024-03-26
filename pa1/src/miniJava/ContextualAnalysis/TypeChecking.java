@@ -63,7 +63,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
         TypeDenoter returnTD = s.visit(this, o);
         if (methodTypeTD.typeKind == TypeKind.VOID) {
           _errors.reportError("TypeChecking Error: Return type of \"" + returnTD.typeKind + "\" for void method");
-        } else if (returnTD != methodTypeTD) {
+        } else if (returnTD.typeKind != methodTypeTD.typeKind) {
           _errors.reportError("TypeChecking Error: Method requires return type \"" + methodTypeTD.typeKind + "\" but got \"" + returnTD.typeKind + "\"");
         }
       } else {
@@ -362,13 +362,17 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   }
 
   public TypeDenoter visitQRef(QualRef qr, Object o) {
+    // TODO: Better errors bud
     TypeDenoter qualTD = qr.ref.visit(this, o);
+    TypeDenoter idTD = qr.id.visit(this, o);
+
     if (qr.ref instanceof ThisRef|| qr.ref.declaration instanceof MethodDecl) {
       _errors.reportError("TypeChecking Error: visitQRef");
     } else if (qualTD.typeKind == TypeKind.CLASS) {
-      // TODO: keep workin here bud
+      if (qr.ref.declaration.name != qr.id.getDeclaration().name) {
+        _errors.reportError("TypeChecking Error: visitQRef");
+      }
     }
-    qr.id.visit(this, o);
     return qualTD;
   }
 
