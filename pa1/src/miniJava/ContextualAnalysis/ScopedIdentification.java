@@ -97,6 +97,7 @@ public class ScopedIdentification {
 
             declaration = idTable.findDeclaration(clas.name + identifier.getName());
             if (declaration != null) {
+                declaration.name = clas.name + "-" + identifier.getName();
                 identifier.setDeclaration(declaration);
                 return declaration;
             } else if (identifier.getName().equals("String")) {

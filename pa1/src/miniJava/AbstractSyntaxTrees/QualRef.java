@@ -13,6 +13,7 @@ public class QualRef extends Reference {
 		super(posn);
 		this.ref = ref;
 		this.id  = id;
+		declaration = this.ref.declaration;
 	}
 
 	@Override

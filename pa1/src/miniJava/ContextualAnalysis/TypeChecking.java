@@ -162,7 +162,6 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     }
     return refTD;
   }
-  // TODO: check parameters to what is required by the method being called
   public TypeDenoter visitCallStmt(CallStmt stmt, Object o){
     if (stmt.methodRef instanceof ThisRef) {
       _errors.reportError("\"thisRef\" cannot be a method reference");
@@ -369,11 +368,17 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     if (qr.ref instanceof ThisRef|| qr.ref.declaration instanceof MethodDecl) {
       _errors.reportError("TypeChecking Error: visitQRef");
     } else if (qualTD.typeKind == TypeKind.CLASS) {
-      if (qr.ref.declaration.name != qr.id.getDeclaration().name) {
-        _errors.reportError("TypeChecking Error: visitQRef");
+      if (qr.ref instanceof QualRef) {
+        assert qr.ref instanceof QualRef;
+        String refContext = ((QualRef) qr.ref).id.getDeclaration().name.split("-")[0];
+        String idContext = qr.id.getDeclaration().name.split("-")[0];
+//        qr.ref.declaration.name != qr.id.getDeclaration().name
+        if (!refContext.equals(idContext)) {
+          _errors.reportError("TypeChecking Error: visitQRef2");
+        }
       }
     }
-    return qualTD;
+    return idTD;
   }
 
 
