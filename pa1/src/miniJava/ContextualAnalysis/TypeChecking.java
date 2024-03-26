@@ -316,11 +316,11 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     //TODO: Change errors to reflect actual errors better
     TypeDenoter refTD = ie.ref.visit(this, o);
     if (refTD.typeKind != TypeKind.ARRAY) {
-      _errors.reportError("TypeChecking Error: visitIxExpr");
+      _errors.reportError("TypeChecking Error: Left hand side of expr needs to be of type ARRAY but is \"" + refTD.typeKind + "\"");
     }
     TypeDenoter ixTD = ie.ixExpr.visit(this, o);
-    if (refTD.typeKind != TypeKind.INT) {
-      _errors.reportError("TypeChecking Error: visitIxExpr");
+    if (ixTD.typeKind != TypeKind.INT) {
+      _errors.reportError("TypeChecking Error: index needs to be of type int but is + \"" + ixTD.typeKind + "\"");
     }
     return refTD;
   }
