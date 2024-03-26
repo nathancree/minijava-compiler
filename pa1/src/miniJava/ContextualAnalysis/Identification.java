@@ -132,7 +132,8 @@ public class Identification implements Visitor<Object,Object> {
         for (ParameterDecl pd: pdl) {
             if (pd.type.typeKind == TypeKind.CLASS) {
                 pd.type.visit(this, arg);
-                si.addDeclaration(pd.name, pd);
+                assert pd.type instanceof ClassType;
+                si.addDeclaration(((ClassType) pd.type).className.getName() + pd.name, pd);
             } else {
                 pd.visit(this, arg);
             }
