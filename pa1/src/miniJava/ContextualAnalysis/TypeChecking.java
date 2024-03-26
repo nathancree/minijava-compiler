@@ -217,6 +217,9 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
       //TODO: Change error to reflect actual error better
       _errors.reportError("TypeChecking Error: visistIfStmt");
     }
+    if (stmt.thenStmt instanceof VarDeclStmt || stmt.elseStmt instanceof VarDeclStmt) {
+      _errors.reportError("TypeChecking Error: Solitary Var decl statement not permitted in if else statement");
+    }
     if (stmt.elseStmt != null)
       stmt.elseStmt.visit(this, o);
     return null;
@@ -229,6 +232,9 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
       _errors.reportError("TypeChecking Error: visistWhileStmt");
     }
     stmt.body.visit(this, o);
+    if (stmt.body instanceof VarDeclStmt) {
+      _errors.reportError("TypeChecking Error: Solitary Var decl statement not permitted in while statement");
+    }
     return null;
   }
 

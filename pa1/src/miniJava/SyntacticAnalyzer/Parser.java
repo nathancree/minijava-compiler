@@ -290,15 +290,15 @@ public class Parser {
       Expression expr = parseExpression();
       accept(TokenType.RPAREN);
       if (_currentToken.getTokenType() != TokenType.LCURLY) {
-        _errors.reportError("Can't have single line if statements");
+//        _errors.reportError("Can't have single line if statements");
       }
       Statement stmt0 = parseStatement();
       Statement stmt1 = null;
       if (_currentToken.getTokenType() == TokenType.ELSE) {
         accept(TokenType.ELSE);
-        if (_currentToken.getTokenType() != TokenType.LCURLY) {
-          _errors.reportError("Can't have single line else statements");
-        }
+//        if (_currentToken.getTokenType() != TokenType.LCURLY) {
+//          _errors.reportError("Can't have single line else statements");
+//        }
         stmt1 = parseStatement();
       }
       return new IfStmt(expr, stmt0, stmt1, null);
@@ -307,9 +307,9 @@ public class Parser {
       accept(TokenType.LPAREN);
       Expression expr = parseExpression();
       accept(TokenType.RPAREN);
-      if (_currentToken.getTokenType() != TokenType.LCURLY) {
-        _errors.reportError("Can't have single line while statements");
-      }
+//      if (_currentToken.getTokenType() != TokenType.LCURLY) {
+//        _errors.reportError("Can't have single line while statements");
+//      }
       Statement stmt = parseStatement();
       return new WhileStmt(expr, stmt, null);
     } else {
