@@ -280,11 +280,11 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
       tdRight = ((ArrayType) tdRight).eltType;
     }
     if (tdLeft.typeKind == TypeKind.BOOLEAN && tdRight.typeKind == TypeKind.BOOLEAN
-            && (operator.equals("&&") || operator.equals("||"))) {
+            && (operator.equals("&&") || operator.equals("||") || operator.equals("==") || operator.equals("!="))) {
       return new BaseType(TypeKind.BOOLEAN, null);
 
     } else if (tdLeft.typeKind == TypeKind.INT && tdRight.typeKind == TypeKind.INT) {
-      if (operator.equals(">") || operator.equals(">=") || operator.equals("<") || operator.equals("<=")) {
+      if (operator.equals(">") || operator.equals(">=") || operator.equals("<") || operator.equals("<=")|| operator.equals("==") || operator.equals("!=")) {
         return new BaseType(TypeKind.BOOLEAN, null);
 
       } else if (operator.equals("+") || operator.equals("-") || operator.equals("*") || operator.equals("/")) {
