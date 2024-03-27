@@ -148,7 +148,7 @@ public class Identification implements Visitor<Object,Object> {
     public Object visitMethodDecl(MethodDecl m, Object arg){
         m.type.visit(this, arg);
         ParameterDeclList pdl = m.parameterDeclList;
-//        si.openScope();
+        si.openScope();
 
         for (ParameterDecl pd: pdl) {
             if (pd.type.typeKind == TypeKind.CLASS) {
@@ -163,7 +163,7 @@ public class Identification implements Visitor<Object,Object> {
         for (Statement s: sl) {
             s.visit(this, arg);
         }
-//        si.closeScope();
+        si.closeScope();
         return null;
     }
     @Override
