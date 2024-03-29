@@ -70,7 +70,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
         s.visit(this, o);
       }
     }
-    return null;
+    return methodTypeTD;
   }
 
   public TypeDenoter visitParameterDecl(ParameterDecl pd, Object o){
@@ -279,7 +279,16 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     if (tdRight.typeKind == TypeKind.ARRAY) {
       tdRight = ((ArrayType) tdRight).eltType;
     }
-    if (tdLeft.typeKind == TypeKind.BOOLEAN && tdRight.typeKind == TypeKind.BOOLEAN
+    if (tdLeft.typeKind == TypeKind.ERROR || tdRight.typeKind == TypeKind.ERROR) {
+      // MARK: Don't need to report an error tho because it is already reported??
+      return new BaseType(TypeKind.ERROR, null);
+//    } else if (tdLeft.typeKind == TypeKind.ARRAY && ((ArrayType) tdLeft).eltType.typeKind != tdRight.typeKind) {
+//      _errors.reportError("TypeChecking Error: Can't compute \"" + ((ArrayType) tdLeft).eltType.typeKind + operator + tdRight.typeKind + "\"");
+//      return new BaseType(TypeKind.ERROR, null);
+//    } else if (tdRight.typeKind == TypeKind.ARRAY && ((ArrayType) tdRight).eltType.typeKind != tdLeft.typeKind) {
+//      _errors.reportError("TypeChecking Error: Can't compute \"" + tdLeft.typeKind + operator + ((ArrayType) tdRight).eltType.typeKind + "\"");
+//      return new BaseType(TypeKind.ERROR, null);
+    } else if (tdLeft.typeKind == TypeKind.BOOLEAN && tdRight.typeKind == TypeKind.BOOLEAN
             && (operator.equals("&&") || operator.equals("||") || operator.equals("==") || operator.equals("!="))) {
       return new BaseType(TypeKind.BOOLEAN, null);
 
@@ -301,15 +310,6 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
         _errors.reportError("Can't compare two classes of type \"" + ((ClassType) tdLeft).className.getName() + "\" and \"" + ((ClassType) tdRight).className.getName() + "\"");
       }
       return new BaseType(TypeKind.BOOLEAN, null);
-    } else if (tdLeft.typeKind == TypeKind.ERROR || tdRight.typeKind == TypeKind.ERROR) {
-      // MARK: Don't need to report an error tho because it is already reported??
-      return new BaseType(TypeKind.ERROR, null);
-//    } else if (tdLeft.typeKind == TypeKind.ARRAY && ((ArrayType) tdLeft).eltType.typeKind != tdRight.typeKind) {
-//      _errors.reportError("TypeChecking Error: Can't compute \"" + ((ArrayType) tdLeft).eltType.typeKind + operator + tdRight.typeKind + "\"");
-//      return new BaseType(TypeKind.ERROR, null);
-//    } else if (tdRight.typeKind == TypeKind.ARRAY && ((ArrayType) tdRight).eltType.typeKind != tdLeft.typeKind) {
-//      _errors.reportError("TypeChecking Error: Can't compute \"" + tdLeft.typeKind + operator + ((ArrayType) tdRight).eltType.typeKind + "\"");
-//      return new BaseType(TypeKind.ERROR, null);
     } else {
       _errors.reportError("TypeChecking Error: Can't compute \"" + tdLeft.typeKind + operator + tdRight.typeKind + "\"");
       return new BaseType(TypeKind.ERROR, null);

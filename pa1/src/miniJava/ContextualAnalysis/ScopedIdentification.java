@@ -66,7 +66,19 @@ public class ScopedIdentification {
         }
     }
     public Declaration findClassDeclaration(Identifier identifier) {
-        Declaration declaration = stack.peekLast().findDeclaration(identifier.getName());
+        Declaration declaration = stack.peekLast().findDeclaration(identifier.getName()+identifier.getName());
+        if (declaration != null) {
+            identifier.setDeclaration(declaration);
+            return declaration;
+        }
+        return null;
+    }
+    public Declaration findlevel1Declaration(Identifier identifier, String className) {
+        ArrayDeque<IDTable> tempStack = new ArrayDeque<>(stack);
+        tempStack.pollLast();
+
+        Declaration declaration = tempStack.peekLast().findDeclaration(className + identifier.getName());
+
         if (declaration != null) {
             identifier.setDeclaration(declaration);
             return declaration;
@@ -74,9 +86,41 @@ public class ScopedIdentification {
         return null;
     }
 
+//    public Declaration findDeclaration(Identifier identifier, ClassDecl clas) {
+////        Declaration declaration = stack.peekLast().findDeclaration(identifier.getName());
+//        Declaration declaration = findClassDeclaration(identifier);
+//
+//        //first check if identifier is a class
+//        if (declaration != null && level < 2) {
+//            identifier.setDeclaration(declaration);
+//            return declaration;
+//        }
+//        for (IDTable idTable : stack) {
+//
+//            declaration = idTable.findDeclaration(clas.name + identifier.getName());
+//            if (declaration != null) {
+//                declaration.name = clas.name + "-" + identifier.getName();
+//                identifier.setDeclaration(declaration);
+//                return declaration;
+//            } else if (identifier.getName().equals("String")) {
+//                declaration = idTable.findDeclaration("StringString");
+//                if (declaration != null) {
+//                    identifier.setDeclaration(declaration);
+//                    return declaration;
+//                }
+//            } else {
+//                declaration = idTable.findDeclaration(clas.name + "-" + identifier.getName());
+//                if(declaration != null) {
+//                    return declaration;
+//                }
+//            }
+//        }
+//        return null;
+//    }
+
     public Declaration findDeclaration(Identifier identifier, ClassDecl clas) {
-//        Declaration declaration = stack.peekLast().findDeclaration(identifier.getName());
-        Declaration declaration = findClassDeclaration(identifier);
+        Declaration declaration;
+        declaration = findClassDeclaration(identifier);
 
         //first check if identifier is a class
         if (declaration != null && level < 2) {
@@ -84,17 +128,12 @@ public class ScopedIdentification {
             return declaration;
         }
         for (IDTable idTable : stack) {
-            // try the identifier with every single class (hell yea brute force)
-//            for (ClassDecl c : classList) {
-////                if (c.name != identifier.getName()) { // Checks for vars w same name as class
-//                    declaration = idTable.findDeclaration(c.name + identifier.getName());
-//                    if (declaration != null) {
-//                        identifier.setDeclaration(declaration);
-//                        return declaration;
-//                    }
-////                }
-//            }
-
+            declaration = idTable.findDeclaration(identifier.getName());
+            if (declaration != null) {
+                declaration.name = clas.name + "-" + identifier.getName();
+                identifier.setDeclaration(declaration);
+                return declaration;
+            }
             declaration = idTable.findDeclaration(clas.name + identifier.getName());
             if (declaration != null) {
                 declaration.name = clas.name + "-" + identifier.getName();
@@ -106,10 +145,23 @@ public class ScopedIdentification {
                     identifier.setDeclaration(declaration);
                     return declaration;
                 }
+            } else {
+                declaration = idTable.findDeclaration(clas.name + "-" + identifier.getName());
+                if(declaration != null) {
+                    return declaration;
+                }
             }
         }
+//        declaration = findClassDeclaration(identifier);
+//
+//        //first check if identifier is a class
+//        if (declaration != null && level < 2) {
+//            identifier.setDeclaration(declaration);
+//            return declaration;
+//        }
         return null;
     }
+
     public void delDeclaration(String identifier, Declaration declaration) {
         try {
             stack.peek().delDeclaration(identifier, declaration);

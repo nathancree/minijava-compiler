@@ -30,7 +30,7 @@ public class Identification implements Visitor<Object,Object> {
         MethodDecl printStreamMethod = new MethodDecl(md, pdl, new StatementList(), null);
         mdl.add(printStreamMethod);
         ClassDecl printStream = new ClassDecl("_PrintStream", new FieldDeclList(), mdl, null);
-        si.addClassDeclaration(printStream.name, printStream);
+        si.addClassDeclaration(printStream.name + printStream.name, printStream);
         si.addDeclaration(printStream.name + "println", printStreamMethod);
 
         // Manually add System and its field (out)
@@ -38,13 +38,13 @@ public class Identification implements Visitor<Object,Object> {
         FieldDecl systemField = new FieldDecl(false, true, new ClassType(new Identifier(new Token(TokenType.CLASS, "_PrintStream"), null), null), "out", null);
         systemFdl.add(systemField);
         ClassDecl system = new ClassDecl("System", systemFdl, new MethodDeclList(), null);
-        si.addClassDeclaration(system.name, system);
+        si.addClassDeclaration(system.name + system.name, system);
         si.addDeclaration(system.name + "out", systemField);
 
 
         // Manually add String class
         ClassDecl stringCls = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), null);
-        si.addClassDeclaration(stringCls.name, stringCls);
+        si.addClassDeclaration(stringCls.name + stringCls.name, stringCls);
 //        visitIdentifier(new Identifier(new Token(TokenType.IDENTIFIER, "String")), stringCls);
 
         // Visit all the classes real quick
@@ -65,7 +65,7 @@ public class Identification implements Visitor<Object,Object> {
     public Object visitPackage(Package prog, Object arg) throws IdentificationError {
         ClassDeclList cl = prog.classDeclList;
         for (ClassDecl c: prog.classDeclList) {
-            si.addClassDeclaration(c.name, c); // add all classes to level 0
+            si.addClassDeclaration(c.name+c.name, c); // add all classes to level 0
         }
 //        si.openScope();
         for (ClassDecl c : prog.classDeclList) {
@@ -176,7 +176,7 @@ public class Identification implements Visitor<Object,Object> {
     @Override
     public Object visitVarDecl(VarDecl vd, Object arg){
         assert arg instanceof ClassDecl;
-        si.addDeclaration(((ClassDecl) arg).name + vd.name, vd);
+        si.addDeclaration(vd.name, vd);
         vd.type.visit(this, arg);
         return null;
     }
@@ -340,12 +340,24 @@ public class Identification implements Visitor<Object,Object> {
     @Override
     public Object visitIdRef(IdRef ref, Object arg) {
         ref.id.visit(this, arg);
+//        if (si.findClassDeclaration(ref.id) == null) {
+//            _errors.reportError("IdentifierError: No declaration made for id \"" + ref.id.getName() + "\"");
+//        }
         return null;
     }
     @Override
     public Object visitQRef(QualRef qr, Object arg) {
         qr.ref.visit(this, arg);
-        qr.id.visit(this, arg);
+        assert qr.ref instanceof IdRef;
+//        if (((IdRef)qr.ref).id.declaration.type != ClassType) {
+//            kill yourself
+//        }
+//        assert (((IdRef)qr.ref).id.getDeclaration().type instanceof ClassDecl;
+
+//        qr.id.visit(this, arg);
+        if (si.findlevel1Declaration(qr.id, ((ClassType)((IdRef)qr.ref).id.getDeclaration().type).className.getName()) == null) {
+            _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
+        }
         return null;
     }
 
