@@ -1,5 +1,6 @@
 package miniJava.ContextualAnalysis;
 
+import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import miniJava.AbstractSyntaxTrees.*;
@@ -59,6 +60,7 @@ public class ScopedIdentification {
         }
     }
     public void addClassDeclaration(String identifier, Declaration declaration) {
+//        declaration.type = new ClassType(identifier, null); // to add a typeDenoter to strings because there are none
         try {
             stack.peekLast().addDeclaration(identifier, declaration);
         } catch (Exception e) {
@@ -82,6 +84,18 @@ public class ScopedIdentification {
         if (declaration != null) {
             identifier.setDeclaration(declaration);
             return declaration;
+        } else {
+            declaration = tempStack.peekLast().findDeclaration("System" + identifier.getName());
+             if (declaration != null) {
+                identifier.setDeclaration(declaration);
+                return declaration;
+             }  else {
+                 declaration = tempStack.peekLast().findDeclaration("_PrintStream" + identifier.getName());
+                 if (declaration != null) {
+                     identifier.setDeclaration(declaration);
+                     return declaration;
+                 }
+             }
         }
         return null;
     }
@@ -140,6 +154,18 @@ public class ScopedIdentification {
                 identifier.setDeclaration(declaration);
                 return declaration;
             } else if (identifier.getName().equals("String")) {
+                declaration = idTable.findDeclaration("StringString");
+                if (declaration != null) {
+                    identifier.setDeclaration(declaration);
+                    return declaration;
+                }
+            } else if (identifier.getName().equals("System")) {
+                declaration = idTable.findDeclaration("SystemSystem");
+                if (declaration != null) {
+                    identifier.setDeclaration(declaration);
+                    return declaration;
+                }
+            } else if (identifier.getName().equals("_PrintSteam_PrintStream")) {
                 declaration = idTable.findDeclaration("StringString");
                 if (declaration != null) {
                     identifier.setDeclaration(declaration);

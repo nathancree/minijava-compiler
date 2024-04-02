@@ -396,6 +396,9 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   public TypeDenoter visitQRef(QualRef qr, Object o) {
     // TODO: Better errors bud
     TypeDenoter qualTD = qr.ref.visit(this, o);
+    if (qualTD == null) {
+      qualTD = new ClassType(((IdRef)qr.ref).id, null);
+    }
     TypeDenoter idTD = qr.id.visit(this, o);
 
     if (qr.ref instanceof ThisRef|| qr.ref.declaration instanceof MethodDecl) {

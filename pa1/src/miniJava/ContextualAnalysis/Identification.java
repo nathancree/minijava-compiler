@@ -348,15 +348,36 @@ public class Identification implements Visitor<Object,Object> {
     @Override
     public Object visitQRef(QualRef qr, Object arg) {
         qr.ref.visit(this, arg);
-        assert qr.ref instanceof IdRef;
+//        assert qr.ref instanceof IdRef;
 //        if (((IdRef)qr.ref).id.declaration.type != ClassType) {
 //            kill yourself
 //        }
 //        assert (((IdRef)qr.ref).id.getDeclaration().type instanceof ClassDecl;
 
 //        qr.id.visit(this, arg);
-        if (si.findlevel1Declaration(qr.id, ((ClassType)((IdRef)qr.ref).id.getDeclaration().type).className.getName()) == null) {
-            _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
+        try {
+            if (si.findlevel1Declaration(qr.id, ((ClassType)((IdRef)qr.ref).id.getDeclaration().type).className.getName()) == null) {
+                _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
+            }
+        } catch (Exception e) {
+            try {
+                if (si.findlevel1Declaration(qr.id, ((IdRef)qr.ref).id.getName()) == null) {
+                    _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
+                }
+            } catch (Exception ex) {
+                if (si.findlevel1Declaration(qr.id, ((IdRef)((QualRef)qr.ref).ref).id.getName()) == null) {
+                    _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
+                }
+            }
+        }
+        try {
+            // TODO THIS FUCKING WORKS BUT NOT FOR THE PREDEFINED CLASSES BLAGA BLAGA BLAGA
+            if (si.findlevel1Declaration(qr.id, ((ClassType)((IdRef)qr.ref).id.getDeclaration().type).className.getName()) == null) {
+                _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
+            }
+        } catch (Exception e) {
+//            qr.id.visit(this, arg);
+            si.findlevel1Declaration(qr.id, "");
         }
         return null;
     }
