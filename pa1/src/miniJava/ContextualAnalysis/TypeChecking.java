@@ -24,7 +24,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 
   public TypeDenoter visitPackage(Package prog, Object o){
     for (ClassDecl c: prog.classDeclList){
-      c.visit(this, o);
+      c.visit(this, c);
     }
     return null;
   }
@@ -394,28 +394,30 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   }
 
   public TypeDenoter visitQRef(QualRef qr, Object o) {
-    // TODO: Better errors bud
-    TypeDenoter qualTD = qr.ref.visit(this, o);
-    if (qualTD == null) {
-      qualTD = new ClassType(((IdRef)qr.ref).id, null);
+    TypeDenoter qualTD;
+    if (qr.ref instanceof QualRef) {
+      qualTD = qr.ref.visit(this, o);
+    } else if (qr.ref instanceof IdRef) {
+      qualTD = qr.ref.visit(this, o);
+    } else if (qr.ref instanceof ThisRef) {
+      qualTD = ((ClassDecl)o).type;
+    } else {
+      _errors.reportError("IdentifierError: Qualified Reference Error ");
+      qualTD = new BaseType(TypeKind.ERROR, null);
     }
+    //TODO PROBS DONT JUST VISIT THIS LIKE THIS
     TypeDenoter idTD = qr.id.visit(this, o);
 
-    if (qr.ref instanceof ThisRef|| qr.ref.declaration instanceof MethodDecl) {
-      _errors.reportError("TypeChecking Error: visitQRef");
-    } else if (qualTD.typeKind == TypeKind.CLASS) {
-      if (qr.ref instanceof QualRef) {
-        assert qr.ref instanceof QualRef;
-        String refContext = ((QualRef) qr.ref).id.getDeclaration().name.split("-")[0];
+    // TODO CHECK QUALTD for other types
+      if (qualTD.typeKind == TypeKind.CLASS) {
+//        String refContext = (qr.ref.id.getDeclaration().name.split("-")[0];
+        String refContext = ((ClassType)qualTD).className.getName();
         String idContext = qr.id.getDeclaration().name.split("-")[0];
-//        qr.ref.declaration.name != qr.id.getDeclaration().name
+        //        qr.ref.declaration.name != qr.id.getDeclaration().name
         if (!refContext.equals(idContext)) {
           _errors.reportError("TypeChecking Error: visitQRef2");
         }
       }
-    } else {
-      _errors.reportError("TypeChecking Error: visitQRef3");
-    }
     return idTD;
   }
 

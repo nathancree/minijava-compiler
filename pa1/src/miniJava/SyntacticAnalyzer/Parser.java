@@ -44,6 +44,7 @@ public class Parser {
 
     // TODO: Take in an identifier token
     String cn = _currentToken.getTokenText();
+    Identifier classId = new Identifier(_currentToken);
     accept(TokenType.IDENTIFIER);
     // TODO: Take in a {
     accept(TokenType.LCURLY);
@@ -67,7 +68,9 @@ public class Parser {
     }
     // TODO: Take in a }
     accept(TokenType.RCURLY);
-    return new ClassDecl(cn, fdl, mdl, null);
+    ClassDecl cl = new ClassDecl(cn, fdl, mdl, null);
+    cl.type = new ClassType(classId, null);
+    return cl;
   }
   private FieldDecl parseFieldDeclaration() throws SyntaxError {
     parseType();

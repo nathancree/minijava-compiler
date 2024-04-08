@@ -87,11 +87,13 @@ public class ScopedIdentification {
         } else {
             declaration = tempStack.peekLast().findDeclaration("System" + identifier.getName());
              if (declaration != null) {
+                 declaration.name = "System-"+identifier.getName();
                 identifier.setDeclaration(declaration);
                 return declaration;
              }  else {
                  declaration = tempStack.peekLast().findDeclaration("_PrintStream" + identifier.getName());
                  if (declaration != null) {
+                     declaration.name = "_PrintStream-"+identifier.getName();
                      identifier.setDeclaration(declaration);
                      return declaration;
                  }
@@ -166,7 +168,7 @@ public class ScopedIdentification {
                     return declaration;
                 }
             } else if (identifier.getName().equals("_PrintSteam_PrintStream")) {
-                declaration = idTable.findDeclaration("StringString");
+                declaration = idTable.findDeclaration("_PrintStream_PrintStream");
                 if (declaration != null) {
                     identifier.setDeclaration(declaration);
                     return declaration;
@@ -177,6 +179,10 @@ public class ScopedIdentification {
                     return declaration;
                 }
             }
+        }
+        declaration = findlevel1Declaration(identifier, clas.name);
+        if(declaration != null) {
+            return declaration;
         }
 //        declaration = findClassDeclaration(identifier);
 //

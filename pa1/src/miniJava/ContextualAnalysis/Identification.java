@@ -30,6 +30,8 @@ public class Identification implements Visitor<Object,Object> {
         MethodDecl printStreamMethod = new MethodDecl(md, pdl, new StatementList(), null);
         mdl.add(printStreamMethod);
         ClassDecl printStream = new ClassDecl("_PrintStream", new FieldDeclList(), mdl, null);
+        TypeDenoter printStreamClassType = new ClassType(new Identifier(new Token(TokenType.IDENTIFIER, "_PrintStream")), null);
+        printStream.type = printStreamClassType;
         si.addClassDeclaration(printStream.name + printStream.name, printStream);
         si.addDeclaration(printStream.name + "println", printStreamMethod);
 
@@ -38,12 +40,16 @@ public class Identification implements Visitor<Object,Object> {
         FieldDecl systemField = new FieldDecl(false, true, new ClassType(new Identifier(new Token(TokenType.CLASS, "_PrintStream"), null), null), "out", null);
         systemFdl.add(systemField);
         ClassDecl system = new ClassDecl("System", systemFdl, new MethodDeclList(), null);
+        TypeDenoter systemClassType = new ClassType(new Identifier(new Token(TokenType.IDENTIFIER, "System")), null);
+        system.type = systemClassType;
         si.addClassDeclaration(system.name + system.name, system);
         si.addDeclaration(system.name + "out", systemField);
 
 
         // Manually add String class
         ClassDecl stringCls = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), null);
+        TypeDenoter stringClassType = new ClassType(new Identifier(new Token(TokenType.IDENTIFIER, "String")), null);
+        system.type = stringClassType;
         si.addClassDeclaration(stringCls.name + stringCls.name, stringCls);
 //        visitIdentifier(new Identifier(new Token(TokenType.IDENTIFIER, "String")), stringCls);
 
@@ -224,8 +230,8 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitVardeclStmt(VarDeclStmt stmt, Object arg){
-        stmt.varDecl.visit(this, arg);
         stmt.initExp.visit(this, arg);
+        stmt.varDecl.visit(this, arg);
         return null;
     }
     @Override
@@ -347,38 +353,53 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitQRef(QualRef qr, Object arg) {
-        qr.ref.visit(this, arg);
-//        assert qr.ref instanceof IdRef;
-//        if (((IdRef)qr.ref).id.declaration.type != ClassType) {
-//            kill yourself
-//        }
-//        assert (((IdRef)qr.ref).id.getDeclaration().type instanceof ClassDecl;
+        if (qr.ref instanceof QualRef) {
+            qr.ref.visit(this, arg);
+        } else if (qr.ref instanceof IdRef) {
+            // check if the left hand side of the qualified reference is a local var
+            // if the left hand side is not a local variable it HAS to be `this` or a Class???
+            if (si.findDeclaration(((IdRef) qr.ref).id, (ClassDecl) arg) == null) { // checks for local var or class type
+                _errors.reportError("IdentifierError: Qualified Reference Error 0");
+            }
 
-//        qr.id.visit(this, arg);
-        try {
-            if (si.findlevel1Declaration(qr.id, ((ClassType)((IdRef)qr.ref).id.getDeclaration().type).className.getName()) == null) {
-                _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
-            }
-        } catch (Exception e) {
-            try {
-                if (si.findlevel1Declaration(qr.id, ((IdRef)qr.ref).id.getName()) == null) {
-                    _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
-                }
-            } catch (Exception ex) {
-                if (si.findlevel1Declaration(qr.id, ((IdRef)((QualRef)qr.ref).ref).id.getName()) == null) {
-                    _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
-                }
-            }
+        } else if (qr.ref instanceof ThisRef) {
+            //DO nothing??
+        } else {
+            _errors.reportError("IdentifierError: Qualified Reference Error ");
         }
-        try {
-            // TODO THIS FUCKING WORKS BUT NOT FOR THE PREDEFINED CLASSES BLAGA BLAGA BLAGA
-            if (si.findlevel1Declaration(qr.id, ((ClassType)((IdRef)qr.ref).id.getDeclaration().type).className.getName()) == null) {
-                _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
-            }
-        } catch (Exception e) {
-//            qr.id.visit(this, arg);
-            si.findlevel1Declaration(qr.id, "");
-        }
+
+        qr.id.visit(this, arg);
+
+////        assert qr.ref instanceof IdRef;
+////        if (((IdRef)qr.ref).id.declaration.type != ClassType) {
+////            kill yourself
+////        }
+////        assert (((IdRef)qr.ref).id.getDeclaration().type instanceof ClassDecl;
+//
+////        qr.id.visit(this, arg);
+//        try {
+//            if (si.findlevel1Declaration(qr.id, ((ClassType)((IdRef)qr.ref).id.getDeclaration().type).className.getName()) == null) {
+//                _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
+//            }
+//        } catch (Exception e) {
+//            try {
+//                if (si.findlevel1Declaration(qr.id, ((IdRef)qr.ref).id.getName()) == null) {
+//                    _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
+//                }
+//            } catch (Exception ex) {
+//                if (si.findlevel1Declaration(qr.id, ((IdRef)((QualRef)qr.ref).ref).id.getName()) == null) {
+//                    _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
+//                }
+//            }
+//        }
+//        try {
+//            if (si.findlevel1Declaration(qr.id, ((ClassType)((IdRef)qr.ref).id.getDeclaration().type).className.getName()) == null) {
+//                _errors.reportError("IdentifierError: No declaration made for id \"" + qr.id.getName() + "\"");
+//            }
+//        } catch (Exception e) {
+////            qr.id.visit(this, arg);
+//            si.findlevel1Declaration(qr.id, "");
+//        }
         return null;
     }
 
