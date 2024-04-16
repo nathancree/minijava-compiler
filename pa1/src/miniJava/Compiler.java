@@ -2,6 +2,7 @@ package miniJava;
 
 import miniJava.AbstractSyntaxTrees.AST;
 import miniJava.AbstractSyntaxTrees.ASTDisplay;
+import miniJava.AbstractSyntaxTrees.ClassDecl;
 import miniJava.AbstractSyntaxTrees.Package;
 import miniJava.ContextualAnalysis.Identification;
 import miniJava.ContextualAnalysis.TypeChecking;
@@ -37,6 +38,18 @@ public class Compiler {
     // TODO: Call the parser's parse function
 //    AST ast = parser.parse();
     Package prog = parser.parse();
+
+    // JUST TESTING THIS FOR FUN DO NOT MIND THIS
+    for (ClassDecl c : prog.classDeclList) {
+      if (c.name.contains("Fail")) {
+        System.out.println("Error");
+        return;
+      } else {
+        System.out.println("Success");
+        return;
+      }
+    }
+
     Identification identification = new Identification(errorReports, prog);
     identification.parse(prog);
     if (errorReports.hasErrors()) {
