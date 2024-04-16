@@ -377,12 +377,14 @@ public class Parser {
       finalExpr = expr;
 
     } else if (_currentToken.getTokenType() == TokenType.INTLITERAL
-        || _currentToken.getTokenType() == TokenType.BOOLEANLITERAL) { // TODO: warning need to check for expression at start not just int or bool
+        || _currentToken.getTokenType() == TokenType.BOOLEANLITERAL || _currentToken.getTokenType() == TokenType.NULLLITERAL) { // TODO: warning need to check for expression at start not just int or bool
       Expression expr0;
       if (_currentToken.getTokenType() == TokenType.INTLITERAL) {
         expr0 = new LiteralExpr(new IntLiteral(_currentToken), null);
-      } else {
+      } else if (_currentToken.getTokenType() == TokenType.BOOLEANLITERAL){
         expr0 = new LiteralExpr(new BooleanLiteral(_currentToken), null);
+      } else {
+        expr0 = new LiteralExpr(new NullLiteral(_currentToken), null);
       }
       _currentToken = _scanner.scan();
       if (_currentToken.getTokenType() == TokenType.OPERATOR) {

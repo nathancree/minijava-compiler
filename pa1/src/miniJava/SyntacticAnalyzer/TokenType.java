@@ -27,7 +27,7 @@ public enum TokenType {
     RETURN,
     WHILE,
     THIS,
-    NULL,
+    NULLLITERAL,
     NEW,
     // maybe not necessary
 //    NUM,

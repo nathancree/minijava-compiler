@@ -260,7 +260,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 //      return tdExpr;
 //    } else if (tdExpr.typeKind == TypeKind.BOOLEAN && expr.operator.spelling.equals("!")) {
 //      return tdExpr;
-//    } else if (tdExpr.typeKind == TypeKind.NULL) { // Done need null?
+//    } else if (tdExpr.typeKind == TypeKind.NULLLITERAL) { // Done need null?
 //      return tdExpr;
     } else {
       _errors.reportError("TypeChecking Error: Can't compute \"" + expr.operator.spelling + tdExpr.typeKind + "\"");

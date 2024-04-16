@@ -171,7 +171,7 @@ public class Scanner {
       case "this":
         return makeToken(TokenType.THIS);
       case "null":
-        return makeToken(TokenType.NULL);
+        return makeToken(TokenType.NULLLITERAL);
       case "new":
         return makeToken(TokenType.NEW);
       case "true":
