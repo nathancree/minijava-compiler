@@ -127,7 +127,9 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     TypeDenoter varTD = stmt.varDecl.visit(this, o);
     if (stmt.initExp != null) {
       TypeDenoter exprTD = stmt.initExp.visit(this, o);
-      if (varTD.typeKind != exprTD.typeKind) {
+      if (exprTD.typeKind == TypeKind.NULL) {
+        return null;
+      } else if (varTD.typeKind != exprTD.typeKind) {
         if (varTD instanceof ArrayType && ((ArrayType) varTD).eltType.typeKind == exprTD.typeKind) {
 //          _errors.reportError("TypeChecking Error: Attempting to assign \"" + (exprTD.typeKind + "\" type to Array of type \"" + ((ArrayType) varTD).eltType.typeKind + "\" type var"));
           return null;

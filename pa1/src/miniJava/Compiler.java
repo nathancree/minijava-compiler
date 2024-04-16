@@ -40,15 +40,15 @@ public class Compiler {
     Package prog = parser.parse();
 
     // JUST TESTING THIS FOR FUN DO NOT MIND THIS
-    for (ClassDecl c : prog.classDeclList) {
-      if (c.name.contains("ail")) {
-        System.out.println("Error");
-        return;
-      } else {
-        System.out.println("Success");
-        return;
-      }
-    }
+//    for (ClassDecl c : prog.classDeclList) {
+//      if (c.name.contains("ail")) {
+//        System.out.println("Error");
+//        return;
+//      } else {
+//        System.out.println("Success");
+//        return;
+//      }
+//    }
 
     Identification identification = new Identification(errorReports, prog);
     identification.parse(prog);
