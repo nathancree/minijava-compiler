@@ -328,10 +328,10 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitCallExpr(CallExpr expr, Object arg){
+        expr.functionRef.visit(this, arg);
         if (!(getRefDecl(expr.functionRef) instanceof MethodDecl)) {
             _errors.reportError("IdentificationError: CallExpr: \"" + getRefDecl(expr.functionRef).name + "\" must be a Method");
         }
-        expr.functionRef.visit(this, arg);
         ExprList al = expr.argList;
         for (Expression e: al) {
             e.visit(this, arg);
@@ -377,10 +377,10 @@ public class Identification implements Visitor<Object,Object> {
     @Override
     public Object visitQRef(QualRef qr, Object arg) {
         Reference ref = qr.ref;
-        if (ref instanceof QualRef) {
-            ref.visit(this, arg);
-        }
-
+//        if (ref instanceof QualRef) {
+//            ref.visit(this, arg);
+//        }
+        ref.visit(this, arg);
         Declaration refDecl = getRefDecl(ref);
         TypeDenoter LHSType = refDecl.type;
 
@@ -396,8 +396,8 @@ public class Identification implements Visitor<Object,Object> {
             if (ref instanceof ThisRef) {
                 idDecl = qr.id.visit(this, currentClass);
             } else {
-                // refDecl must be ClassDecl?
-                idDecl = qr.id.visit(this, refDecl);
+                //check for static vs nonstatic
+                idDecl = qr.id.visit(this, currentClass);
             }
         } else if (refDecl instanceof MemberDecl) {
             Declaration LHSClassDecl = visitClassType((ClassType) LHSType, arg);
