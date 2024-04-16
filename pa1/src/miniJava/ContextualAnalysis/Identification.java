@@ -9,6 +9,19 @@ import miniJava.SyntacticAnalyzer.TokenType;
 public class Identification implements Visitor<Object,Object> {
     private ErrorReporter _errors;
     private ScopedIdentification si;
+    private ClassDecl currentClass;
+
+    private Declaration getRefDecl(Reference ref) {
+        if (ref instanceof ThisRef) {
+            return currentClass;
+        } else if (ref instanceof QualRef) {
+            return ((QualRef)ref).id.getDeclaration();
+        } else if (ref instanceof IdRef) {
+            return ((IdRef)ref).id.getDeclaration();
+        } else {
+            return null;
+        }
+    }
 
     public Identification(ErrorReporter errors, Package _package) {
         this._errors = errors;
@@ -20,7 +33,8 @@ public class Identification implements Visitor<Object,Object> {
         }
     }
 
-    private void addPredefinedClasses() {  // MARK: Make sure we are adding correct class names? Should it only be singular or keep double like rest of convention?
+    private void addPredefinedClasses() {
+        // Make sure we are adding correct class names? Should it only be singular or keep double like rest of convention?
         // Manually add _PrintStream, and it's method (_println)
         MethodDeclList mdl = new MethodDeclList();
         FieldDecl md = new FieldDecl(false, false, new BaseType(TypeKind.VOID, null),"println", null);
@@ -89,7 +103,8 @@ public class Identification implements Visitor<Object,Object> {
         }
       // Starting actually visiting each class
       for (ClassDecl c : prog.classDeclList) {
-            c.visit(this, arg);
+          currentClass = c;
+          c.visit(this, arg);
       }
 
 //        throw new IdentificationError("Not yet implemented!");
@@ -198,14 +213,15 @@ public class Identification implements Visitor<Object,Object> {
         return null;
     }
     @Override
-    public Object visitClassType(ClassType ct, Object arg){
+    public ClassDecl visitClassType(ClassType ct, Object arg){
 //        ct.className.visit(this, arg);
-        if (si.findClassDeclaration(ct.className) == null) {
+        Declaration classDecl = si.findClassDeclaration(ct.className);
+        if (classDecl == null || !(classDecl instanceof ClassDecl)) {
             _errors.reportError("IdentifierError: ID \"" + ct.className.getName() + "\" requires type CLASS and cannot be found.");
         } //else {
 //            id.setDeclaration(si.findDeclaration(id));
 //        }
-        return null;
+        return (ClassDecl) classDecl;
     }
     @Override
     public Object visitArrayType(ArrayType type, Object arg){
@@ -298,6 +314,9 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitRefExpr(RefExpr expr, Object arg){
+        if (getRefDecl(expr.ref) instanceof MethodDecl) {
+            _errors.reportError("IdentificationError: refExpr: \"" + getRefDecl(expr.ref).name + "\" cannot be a Method");
+        }
         expr.ref.visit(this, arg);
         return null;
     }
@@ -309,6 +328,9 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitCallExpr(CallExpr expr, Object arg){
+        if (!(getRefDecl(expr.functionRef) instanceof MethodDecl)) {
+            _errors.reportError("IdentificationError: CallExpr: \"" + getRefDecl(expr.functionRef).name + "\" must be a Method");
+        }
         expr.functionRef.visit(this, arg);
         ExprList al = expr.argList;
         for (Expression e: al) {
@@ -341,35 +363,77 @@ public class Identification implements Visitor<Object,Object> {
     ///////////////////////////////////////////////////////////////////////////////
     @Override
     public Object visitThisRef(ThisRef ref, Object arg) {
-        return null;
+        return currentClass;
     }
     @Override
     public Object visitIdRef(IdRef ref, Object arg) {
-        ref.id.visit(this, arg);
+        ref.id.visit(this, currentClass);
 //        if (si.findClassDeclaration(ref.id) == null) {
 //            _errors.reportError("IdentifierError: No declaration made for id \"" + ref.id.getName() + "\"");
 //        }
+        //check for static
         return null;
     }
     @Override
     public Object visitQRef(QualRef qr, Object arg) {
-        if (qr.ref instanceof QualRef) {
-            qr.ref.visit(this, arg);
-        } else if (qr.ref instanceof IdRef) {
-            // check if the left hand side of the qualified reference is a local var
-            // if the left hand side is not a local variable it HAS to be `this` or a Class???
-            if (si.findDeclaration(((IdRef) qr.ref).id, (ClassDecl) arg) == null) { // checks for local var or class type
-                _errors.reportError("IdentifierError: Qualified Reference Error 0");
-            }
-
-        } else if (qr.ref instanceof ThisRef) {
-            //DO nothing??
-        } else {
-            _errors.reportError("IdentifierError: Qualified Reference Error ");
+        Reference ref = qr.ref;
+        if (ref instanceof QualRef) {
+            ref.visit(this, arg);
         }
 
-        qr.id.visit(this, arg);
+        Declaration refDecl = getRefDecl(ref);
+        TypeDenoter LHSType = refDecl.type;
 
+        if (LHSType.typeKind != TypeKind.CLASS) {
+            if (!(ref instanceof ThisRef)) {
+                _errors.reportError("IdentificationError: Left hand side of QRef must be a ClassType");
+            }
+        }
+
+        Object idDecl = null; //Object but technically will always resolve to a declaration?
+        // Resolve RHS based on the context of the LHS Declaration
+        if (refDecl instanceof ClassDecl || refDecl instanceof LocalDecl) {
+            if (ref instanceof ThisRef) {
+                idDecl = qr.id.visit(this, currentClass);
+            } else {
+                // refDecl must be ClassDecl?
+                idDecl = qr.id.visit(this, refDecl);
+            }
+        } else if (refDecl instanceof MemberDecl) {
+            Declaration LHSClassDecl = visitClassType((ClassType) LHSType, arg);
+            idDecl = qr.id.visit(this, LHSClassDecl); // LHSClassDecl must be ClassDecl
+        } else {
+            _errors.reportError("IdentificationError: Left hand side of QRef cannot be a \"" + refDecl + "\"");
+            return null;
+        }
+
+        if (!(idDecl instanceof MemberDecl)) {
+            _errors.reportError("IdentificationError: RHS of QRef must be a MemberDecl");
+        }
+
+
+
+
+        // Qref mark3
+//        if (qr.ref instanceof QualRef) {
+//            qr.ref.visit(this, arg);
+//        } else if (qr.ref instanceof IdRef) {
+//            // check if the left hand side of the qualified reference is a local var
+//            // if the left hand side is not a local variable it HAS to be `this` or a Class???
+//            if (si.findDeclaration(((IdRef) qr.ref).id, (ClassDecl) arg) == null) { // checks for local var or class type
+//                _errors.reportError("IdentifierError: Qualified Reference Error 0");
+//            }
+//
+//        } else if (qr.ref instanceof ThisRef) {
+//            //DO nothing??
+//        } else {
+//            _errors.reportError("IdentifierError: Qualified Reference Error ");
+//        }
+//
+//        qr.id.visit(this, arg);
+
+
+        // Qref mark 2
 ////        assert qr.ref instanceof IdRef;
 ////        if (((IdRef)qr.ref).id.declaration.type != ClassType) {
 ////            kill yourself
@@ -410,13 +474,14 @@ public class Identification implements Visitor<Object,Object> {
     //
     ///////////////////////////////////////////////////////////////////////////////
     @Override
-    public Object visitIdentifier(Identifier id, Object arg) { // wherever visitIdentifier is called pass Class context as arg and use that in findDeclaration
-        if (si.findDeclaration(id, (ClassDecl) arg) == null) {
+    public Declaration visitIdentifier(Identifier id, Object arg) { // wherever visitIdentifier is called pass Class context as arg and use that in findDeclaration
+        Declaration decl = si.findDeclaration(id, (ClassDecl) arg);
+        if (decl == null) {
             _errors.reportError("IdentifierError: No declaration made for id \"" + id.getName() + "\"");
         } //else {
 //            id.setDeclaration(si.findDeclaration(id));
 //        }
-        return null;
+        return decl;
     }
     @Override
     public Object visitOperator(Operator op, Object arg){
