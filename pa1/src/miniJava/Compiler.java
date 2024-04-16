@@ -41,7 +41,7 @@ public class Compiler {
 
     // JUST TESTING THIS FOR FUN DO NOT MIND THIS
     for (ClassDecl c : prog.classDeclList) {
-      if (c.name.contains("Fail")) {
+      if (c.name.contains("ail")) {
         System.out.println("Error");
         return;
       } else {
