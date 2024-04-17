@@ -383,6 +383,10 @@ public class Identification implements Visitor<Object,Object> {
 
         if (ref instanceof IdRef) {
             ClassDecl tempClassDecl = currentClass;
+            if (((IdRef)ref).id.getDeclaration() == null) {
+                _errors.reportError("IdentificationError: Base IdRef in QRef has not been declared");
+                return null;
+            }
             TypeDenoter tempType = ((IdRef)ref).id.getDeclaration().type;
             if (tempType instanceof ArrayType) {
                 tempType = ((ArrayType) tempType).eltType;
