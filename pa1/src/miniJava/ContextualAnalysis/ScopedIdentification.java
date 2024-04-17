@@ -82,6 +82,7 @@ public class ScopedIdentification {
         Declaration declaration = tempStack.peekLast().findDeclaration(className + identifier.getName());
 
         if (declaration != null) {
+            declaration.name = className + "-" + identifier.getName();
             identifier.setDeclaration(declaration);
             return declaration;
         } else {
@@ -181,9 +182,7 @@ public class ScopedIdentification {
             }
         }
         declaration = findlevel1Declaration(identifier, clas.name);
-        if(declaration != null) {
-            return declaration;
-        }
+
 //        declaration = findClassDeclaration(identifier);
 //
 //        //first check if identifier is a class

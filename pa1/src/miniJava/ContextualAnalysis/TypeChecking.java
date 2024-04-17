@@ -127,7 +127,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     TypeDenoter varTD = stmt.varDecl.visit(this, o);
     if (stmt.initExp != null) {
       TypeDenoter exprTD = stmt.initExp.visit(this, o);
-      if (exprTD.typeKind == TypeKind.NULL) {
+      if (exprTD.typeKind == TypeKind.NULL || exprTD.typeKind == TypeKind.ERROR) {
         return null;
       } else if (varTD.typeKind != exprTD.typeKind) {
         if (varTD instanceof ArrayType && ((ArrayType) varTD).eltType.typeKind == exprTD.typeKind) {
@@ -395,31 +395,53 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 //    return null;
   }
 
+//  public TypeDenoter visitQRef(QualRef qr, Object o) {
+//    TypeDenoter qualTD;
+//    if (qr.ref instanceof QualRef) {
+//      qualTD = qr.ref.visit(this, o);
+//    } else if (qr.ref instanceof IdRef) {
+//      qualTD = qr.ref.visit(this, o);
+//    } else if (qr.ref instanceof ThisRef) {
+//      qualTD = ((ClassDecl)o).type;
+//    } else {
+//      _errors.reportError("IdentifierError: Qualified Reference Error ");
+//      qualTD = new BaseType(TypeKind.ERROR, null);
+//    }
+//    //TODO PROBS DONT JUST VISIT THIS LIKE THIS
+//    TypeDenoter idTD = qr.id.visit(this, o);
+//
+//    // TODO CHECK QUALTD for other types
+//      if (qualTD.typeKind == TypeKind.CLASS) {
+////        String refContext = (qr.ref.id.getDeclaration().name.split("-")[0];
+//        String refContext = ((ClassType)qualTD).className.getName();
+//        String idContext = qr.id.getDeclaration().name.split("-")[0];
+//        //        qr.ref.declaration.name != qr.id.getDeclaration().name
+//        if (!refContext.equals(idContext)) {
+//          _errors.reportError("TypeChecking Error: visitQRef2");
+//        }
+//      }
+//    return idTD;
+//  }
   public TypeDenoter visitQRef(QualRef qr, Object o) {
-    TypeDenoter qualTD;
-    if (qr.ref instanceof QualRef) {
-      qualTD = qr.ref.visit(this, o);
-    } else if (qr.ref instanceof IdRef) {
-      qualTD = qr.ref.visit(this, o);
-    } else if (qr.ref instanceof ThisRef) {
-      qualTD = ((ClassDecl)o).type;
-    } else {
-      _errors.reportError("IdentifierError: Qualified Reference Error ");
-      qualTD = new BaseType(TypeKind.ERROR, null);
-    }
-    //TODO PROBS DONT JUST VISIT THIS LIKE THIS
+    TypeDenoter refTD = qr.ref.visit(this, o);
     TypeDenoter idTD = qr.id.visit(this, o);
+//    if (refTD.typeKind != idTD.typeKind) {
+//      _errors.reportError("TypeCheckingError: QRef0");
+//      return new BaseType(TypeKind.ERROR, null);
+//    }
 
-    // TODO CHECK QUALTD for other types
-      if (qualTD.typeKind == TypeKind.CLASS) {
-//        String refContext = (qr.ref.id.getDeclaration().name.split("-")[0];
-        String refContext = ((ClassType)qualTD).className.getName();
-        String idContext = qr.id.getDeclaration().name.split("-")[0];
-        //        qr.ref.declaration.name != qr.id.getDeclaration().name
-        if (!refContext.equals(idContext)) {
-          _errors.reportError("TypeChecking Error: visitQRef2");
-        }
-      }
+
+    String refContext = qr.ref.declaration.name.split("-")[0];
+    String idContext = qr.id.getDeclaration().name.split("-")[0];
+    if (qr.ref instanceof QualRef) {
+      refContext = ((ClassType)((QualRef)qr.ref).id.getDeclaration().type).className.getName();
+    }
+    if (!refContext.equals(idContext)) {
+      _errors.reportError("TypeChecking Error: visitQRef2");
+      return new BaseType(TypeKind.ERROR, null);
+    }
+
+
     return idTD;
   }
 

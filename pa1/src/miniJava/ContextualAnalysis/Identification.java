@@ -363,6 +363,7 @@ public class Identification implements Visitor<Object,Object> {
     ///////////////////////////////////////////////////////////////////////////////
     @Override
     public Object visitThisRef(ThisRef ref, Object arg) {
+        ref.declaration = (ClassDecl)arg;
         return currentClass;
     }
     @Override
@@ -372,6 +373,7 @@ public class Identification implements Visitor<Object,Object> {
 //            _errors.reportError("IdentifierError: No declaration made for id \"" + ref.id.getName() + "\"");
 //        }
         //check for static
+        ref.declaration = ref.id.getDeclaration();
         return null;
     }
     @Override
@@ -382,11 +384,15 @@ public class Identification implements Visitor<Object,Object> {
 //        }
         ref.visit(this, arg);
         Declaration refDecl = getRefDecl(ref);
+        if (refDecl == null) {
+            _errors.reportError("IdentificationError: Cannot find declaration for LHS of QRef");
+            return null;
+        }
         TypeDenoter LHSType = refDecl.type;
-
         if (LHSType.typeKind != TypeKind.CLASS) {
             if (!(ref instanceof ThisRef)) {
                 _errors.reportError("IdentificationError: Left hand side of QRef must be a ClassType");
+                return null;
             }
         }
 
@@ -394,21 +400,27 @@ public class Identification implements Visitor<Object,Object> {
         // Resolve RHS based on the context of the LHS Declaration
         if (refDecl instanceof ClassDecl || refDecl instanceof LocalDecl) {
             if (ref instanceof ThisRef) {
-                idDecl = qr.id.visit(this, currentClass);
+                idDecl = si.findlevel1Declaration(qr.id, currentClass.name);
+
             } else {
                 //check for static vs nonstatic
-                idDecl = qr.id.visit(this, currentClass);
+                idDecl = si.findlevel1Declaration(qr.id, refDecl.name);
             }
         } else if (refDecl instanceof MemberDecl) {
             Declaration LHSClassDecl = visitClassType((ClassType) LHSType, arg);
-            idDecl = qr.id.visit(this, LHSClassDecl); // LHSClassDecl must be ClassDecl
+            idDecl = si.findlevel1Declaration(qr.id, LHSClassDecl.name);
         } else {
             _errors.reportError("IdentificationError: Left hand side of QRef cannot be a \"" + refDecl + "\"");
             return null;
         }
 
+        if (idDecl == null) {
+            _errors.reportError("IdentificationError: No declaration found for \"" + qr.id.getName() + "\" in QRef");
+        }
+
         if (!(idDecl instanceof MemberDecl)) {
-            _errors.reportError("IdentificationError: RHS of QRef must be a MemberDecl");
+      _errors.reportError(
+          "IdentificationError: RHS of QRef must be a MemberDecl but is instead \"" + idDecl + "\"");
         }
 
 
@@ -464,6 +476,7 @@ public class Identification implements Visitor<Object,Object> {
 ////            qr.id.visit(this, arg);
 //            si.findlevel1Declaration(qr.id, "");
 //        }
+        qr.declaration = qr.id.getDeclaration();
         return null;
     }
 
@@ -477,10 +490,13 @@ public class Identification implements Visitor<Object,Object> {
     public Declaration visitIdentifier(Identifier id, Object arg) { // wherever visitIdentifier is called pass Class context as arg and use that in findDeclaration
         Declaration decl = si.findDeclaration(id, (ClassDecl) arg);
         if (decl == null) {
-            _errors.reportError("IdentifierError: No declaration made for id \"" + id.getName() + "\"");
-        } //else {
-//            id.setDeclaration(si.findDeclaration(id));
-//        }
+            decl = si.findClassDeclaration(id);
+            if (decl == null) {
+                _errors.reportError("IdentifierError: No declaration made for id \"" + id.getName() + "\"");
+            } // else {
+          //            id.setDeclaration(si.findDeclaration(id));
+          //        }
+        }
         return decl;
     }
     @Override
