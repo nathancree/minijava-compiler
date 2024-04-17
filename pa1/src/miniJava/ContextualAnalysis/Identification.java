@@ -404,7 +404,8 @@ public class Identification implements Visitor<Object,Object> {
 
             } else {
                 //check for static vs nonstatic
-                idDecl = si.findlevel1Declaration(qr.id, refDecl.name);
+                String refContext = refDecl.name.split("-")[0];
+                idDecl = si.findlevel1Declaration(qr.id, refContext);
             }
         } else if (refDecl instanceof MemberDecl) {
             Declaration LHSClassDecl = visitClassType((ClassType) LHSType, arg);
