@@ -157,6 +157,12 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
   public TypeDenoter visitAssignStmt(AssignStmt stmt, Object o){
     TypeDenoter refTD = stmt.ref.visit(this, o);
     TypeDenoter valTD = stmt.val.visit(this, o);
+    if (refTD.typeKind == TypeKind.ARRAY) {
+      refTD = ((ArrayType) refTD).eltType;
+    }
+    if (valTD.typeKind == TypeKind.ARRAY) {
+      valTD = ((ArrayType) valTD).eltType;
+    }
     if (refTD.typeKind != valTD.typeKind) {
       _errors.reportError("TypeChecking Error: Attempting to assign \"" + valTD.typeKind + "\" to reference of type \"" + refTD.typeKind + "\"");
     } else if (stmt.val instanceof RefExpr) {
