@@ -379,22 +379,17 @@ public class Identification implements Visitor<Object,Object> {
     @Override
     public Object visitQRef(QualRef qr, Object arg) {
         Reference ref = qr.ref;
-//        if (ref instanceof QualRef) {
-//            ref.visit(this, arg);
-//        }
         ref.visit(this, arg);
 
         if (ref instanceof IdRef) {
             ClassDecl tempClassDecl = currentClass;
-            currentClass = visitClassType((ClassType) ((IdRef)ref).id.getDeclaration().type, arg);
+            TypeDenoter tempType = ((IdRef)ref).id.getDeclaration().type;
+            if (tempType instanceof ArrayType) {
+                tempType = ((ArrayType) tempType).eltType;
+            }
+            currentClass = visitClassType((ClassType) tempType, arg);
             ref.visit(this, arg);
             currentClass = tempClassDecl;
-//            Declaration refClassDecl = visitClassType((ClassType) ((IdRef)ref).id.getDeclaration().type, arg);
-////            Declaration tempDecl = ((IdRef)ref).id.getDeclaration();
-//            si.delDeclaration(((IdRef)ref).id.getName(), ((IdRef)ref).id.getDeclaration());
-//            ref.visit(this, refClassDecl);
-        } else {
-//            ref.visit(this, arg);
         }
         Declaration refDecl = getRefDecl(ref);
         if (refDecl == null) {
