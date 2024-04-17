@@ -387,6 +387,10 @@ public class Identification implements Visitor<Object,Object> {
             if (tempType instanceof ArrayType) {
                 tempType = ((ArrayType) tempType).eltType;
             }
+            if (!(tempType instanceof ClassType)) {
+                _errors.reportError("IdentificationError: Only classes references can be qualified");
+                return null;
+            }
             currentClass = visitClassType((ClassType) tempType, arg);
             ref.visit(this, arg);
             currentClass = tempClassDecl;
