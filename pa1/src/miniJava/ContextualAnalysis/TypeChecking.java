@@ -8,6 +8,7 @@ import java.lang.reflect.Type;
 
 public class TypeChecking implements Visitor<Object, TypeDenoter> {
   private ErrorReporter _errors;
+  private ClassDecl currentClass;
 
   public TypeChecking(ErrorReporter errors) {
     this._errors = errors;
@@ -24,6 +25,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 
   public TypeDenoter visitPackage(Package prog, Object o){
     for (ClassDecl c: prog.classDeclList){
+      currentClass = c;
       c.visit(this, c);
     }
     return null;
@@ -403,7 +405,7 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     // TODO: THIS SUCKS
 //    assert o instanceof ClassDecl;
 //    return (TypeDenoter) o;
-    return null;
+    return ((ClassDecl)o).type;
   }
 
   public TypeDenoter visitIdRef(IdRef ref, Object o) {
