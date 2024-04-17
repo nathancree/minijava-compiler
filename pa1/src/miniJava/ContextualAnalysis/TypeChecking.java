@@ -127,13 +127,23 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     TypeDenoter varTD = stmt.varDecl.visit(this, o);
     if (stmt.initExp != null) {
       TypeDenoter exprTD = stmt.initExp.visit(this, o);
+      // TODO:
+      // if (varTD == exprTD == ARRAYTYPE) { Check to make sure both elttypes match }
+      // if (varTD == ARRAYTYPE) { Check exprTD matches varTD.elttype }
+      // if (exprType == ARRAYTYPE { Check expr.TD.eltType matches varTD
+      if (varTD.typeKind == TypeKind.ARRAY) {
+        varTD = ((ArrayType) varTD).eltType;
+      }
+      if (exprTD.typeKind == TypeKind.ARRAY) {
+        exprTD = ((ArrayType) exprTD).eltType;
+      }
       if (exprTD.typeKind == TypeKind.NULL || exprTD.typeKind == TypeKind.ERROR) {
         return null;
       } else if (varTD.typeKind != exprTD.typeKind) {
-        if (varTD instanceof ArrayType && ((ArrayType) varTD).eltType.typeKind == exprTD.typeKind) {
-//          _errors.reportError("TypeChecking Error: Attempting to assign \"" + (exprTD.typeKind + "\" type to Array of type \"" + ((ArrayType) varTD).eltType.typeKind + "\" type var"));
-          return null;
-        }
+//        if (varTD instanceof ArrayType && ((ArrayType) varTD).eltType.typeKind == exprTD.typeKind) {
+////          _errors.reportError("TypeChecking Error: Attempting to assign \"" + (exprTD.typeKind + "\" type to Array of type \"" + ((ArrayType) varTD).eltType.typeKind + "\" type var"));
+//          return null;
+//        }
         _errors.reportError("TypeChecking Error: Attempting to assign \"" + exprTD.typeKind + "\" to \"" + varTD.typeKind + "\" var");
       } else {
         if (varTD.typeKind == TypeKind.CLASS && !((ClassType) varTD).className.getName().equals(((ClassType) exprTD).className.getName())) { // if assigning class to class compare the names of classes
