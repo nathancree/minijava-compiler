@@ -10,6 +10,7 @@ public class Identification implements Visitor<Object,Object> {
     private ErrorReporter _errors;
     private ScopedIdentification si;
     private ClassDecl currentClass;
+    private int qreflevel = 0;
 
     private Declaration getRefDecl(Reference ref) {
         if (ref instanceof ThisRef) {
@@ -392,6 +393,7 @@ public class Identification implements Visitor<Object,Object> {
     @Override
     public Object visitQRef(QualRef qr, Object arg) {
         Reference ref = qr.ref;
+        qreflevel++;
         ref.visit(this, arg);
 
         if (ref instanceof IdRef) {
@@ -458,9 +460,13 @@ public class Identification implements Visitor<Object,Object> {
         }
 
         // Static check if LHS is ClassDecl
-
         if (!(ref instanceof ThisRef) && refDecl instanceof ClassDecl && idDecl instanceof MemberDecl && !((MemberDecl) idDecl).isStatic) {
             _errors.reportError("IdentificationError: Trying to reference non-static \"" + ((MemberDecl) idDecl).name + "\" in a static context");
+            return null;
+        }
+
+        if (idDecl instanceof MethodDecl && qreflevel > 1) {
+            _errors.reportError("IdentificationError: QRef can only reference methods as the last id on the rhs");
             return null;
         }
 
@@ -517,6 +523,7 @@ public class Identification implements Visitor<Object,Object> {
 ////            qr.id.visit(this, arg);
 //            si.findlevel1Declaration(qr.id, "");
 //        }
+        qreflevel--;
         qr.declaration = qr.id.getDeclaration();
         return null;
     }
