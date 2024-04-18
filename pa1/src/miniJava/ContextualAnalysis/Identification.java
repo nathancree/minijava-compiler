@@ -248,7 +248,7 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitVardeclStmt(VarDeclStmt stmt, Object arg){
-        stmt.initExp.visit(this, arg);
+        stmt.initExp.visit(this, stmt);
         stmt.varDecl.visit(this, arg);
         return null;
     }
@@ -377,7 +377,11 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitIdRef(IdRef ref, Object arg) {
-        ref.id.visit(this, currentClass);
+        if (arg instanceof VarDeclStmt) {
+            ref.id.visit(this, arg);
+        } else {
+            ref.id.visit(this, currentClass);
+        }
 //        if (si.findClassDeclaration(ref.id) == null) {
 //            _errors.reportError("IdentifierError: No declaration made for id \"" + ref.id.getName() + "\"");
 //        }
@@ -535,7 +539,10 @@ public class Identification implements Visitor<Object,Object> {
     //
     ///////////////////////////////////////////////////////////////////////////////
     @Override
-    public Declaration visitIdentifier(Identifier id, Object arg) { // wherever visitIdentifier is called pass Class context as arg and use that in findDeclaration
+    public Declaration visitIdentifier(Identifier id, Object arg) {
+        if (arg instanceof VarDeclStmt && id.getName().equals(((VarDeclStmt)arg).varDecl.name)) {
+            _errors.reportError("IdentifierError: Cannot reference var within its own initializing statement");
+        }
         Declaration decl = si.findDeclaration(id, currentClass);
         if (decl == null) {
             decl = si.findClassDeclaration(id);
