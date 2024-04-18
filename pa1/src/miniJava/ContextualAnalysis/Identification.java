@@ -247,14 +247,17 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitVardeclStmt(VarDeclStmt stmt, Object arg){
-        stmt.varDecl.visit(this, arg);
         stmt.initExp.visit(this, arg);
+        stmt.varDecl.visit(this, arg);
         return null;
     }
     @Override
     public Object visitAssignStmt(AssignStmt stmt, Object arg){
         stmt.ref.visit(this, arg);
         stmt.val.visit(this, arg);
+        if(stmt.val instanceof RefExpr && ((IdRef)((RefExpr)stmt.val).ref).id.getDeclaration() instanceof ClassDecl) {
+            _errors.reportError("IdentificationError: Class Literals cannot be assigned to assignment statements");
+        }
         return null;
     }
     @Override
