@@ -194,7 +194,7 @@ public class Identification implements Visitor<Object,Object> {
     public Object visitParameterDecl(ParameterDecl pd, Object arg){
 //        assert arg instanceof ClassDecl;
 //        si.addDeclaration(((ClassDecl) arg).name + pd.name, pd);
-        si.addDeclaration(currentClass.name + pd.name, pd);
+        si.addDeclaration(pd.name, pd);
         pd.type.visit(this, arg);
         return null;
     }
