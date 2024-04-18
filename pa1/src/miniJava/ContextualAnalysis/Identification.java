@@ -255,7 +255,7 @@ public class Identification implements Visitor<Object,Object> {
     public Object visitAssignStmt(AssignStmt stmt, Object arg){
         stmt.ref.visit(this, arg);
         stmt.val.visit(this, arg);
-        if(stmt.val instanceof RefExpr && ((IdRef)((RefExpr)stmt.val).ref).id.getDeclaration() instanceof ClassDecl) {
+        if(stmt.val instanceof RefExpr && ((RefExpr) stmt.val).ref instanceof IdRef && ((IdRef)((RefExpr)stmt.val).ref).id.getDeclaration() instanceof ClassDecl) {
             _errors.reportError("IdentificationError: Class Literals cannot be assigned to assignment statements");
         }
         return null;
