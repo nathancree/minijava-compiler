@@ -11,6 +11,7 @@ public class Identification implements Visitor<Object,Object> {
     private ScopedIdentification si;
     private ClassDecl currentClass;
     private int qreflevel = 0;
+    private VarDeclStmt curVarDeclStmt;
 
     private Declaration getRefDecl(Reference ref) {
         if (ref instanceof ThisRef) {
@@ -248,8 +249,10 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitVardeclStmt(VarDeclStmt stmt, Object arg){
-        stmt.initExp.visit(this, stmt);
+        curVarDeclStmt = stmt;
+        stmt.initExp.visit(this, arg);
         stmt.varDecl.visit(this, arg);
+        curVarDeclStmt = null;
         return null;
     }
     @Override
@@ -368,7 +371,6 @@ public class Identification implements Visitor<Object,Object> {
     ///////////////////////////////////////////////////////////////////////////////
     @Override
     public Object visitThisRef(ThisRef ref, Object arg) {
-//        ref.declaration = (ClassDecl)arg;
         ref.declaration = currentClass;
         if (arg instanceof MethodDecl && ((MethodDecl)arg).isStatic) {
             _errors.reportError("IdentificationError: Cannot reference \"this\" within a static context");
@@ -377,14 +379,12 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitIdRef(IdRef ref, Object arg) {
-        if (arg instanceof VarDeclStmt) {
-            ref.id.visit(this, arg);
-        } else {
-            ref.id.visit(this, currentClass);
-        }
-//        if (si.findClassDeclaration(ref.id) == null) {
-//            _errors.reportError("IdentifierError: No declaration made for id \"" + ref.id.getName() + "\"");
+//        if (arg instanceof VarDeclStmt) {
+//            ref.id.visit(this, arg);
+//        } else {
+//            ref.id.visit(this, currentClass);
 //        }
+        ref.id.visit(this, currentClass);
         //check for static
         ref.declaration = ref.id.getDeclaration();
         if (arg instanceof MethodDecl && ((MethodDecl)arg).isStatic) {
@@ -540,9 +540,13 @@ public class Identification implements Visitor<Object,Object> {
     ///////////////////////////////////////////////////////////////////////////////
     @Override
     public Declaration visitIdentifier(Identifier id, Object arg) {
-        if (arg instanceof VarDeclStmt && id.getName().equals(((VarDeclStmt)arg).varDecl.name)) {
+//        if (arg instanceof VarDeclStmt && id.getName().equals(((VarDeclStmt)arg).varDecl.name)) {
+//            _errors.reportError("IdentifierError: Cannot reference var within its own initializing statement");
+//        }
+        if (curVarDeclStmt != null && id.getName().equals(curVarDeclStmt.varDecl.name)) {
             _errors.reportError("IdentifierError: Cannot reference var within its own initializing statement");
         }
+
         Declaration decl = si.findDeclaration(id, currentClass);
         if (decl == null) {
             decl = si.findClassDeclaration(id);
