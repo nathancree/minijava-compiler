@@ -247,8 +247,8 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitVardeclStmt(VarDeclStmt stmt, Object arg){
-        stmt.initExp.visit(this, arg);
         stmt.varDecl.visit(this, arg);
+        stmt.initExp.visit(this, arg);
         return null;
     }
     @Override
@@ -315,10 +315,10 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitRefExpr(RefExpr expr, Object arg){
+        expr.ref.visit(this, arg);
         if (getRefDecl(expr.ref) instanceof MethodDecl) {
             _errors.reportError("IdentificationError: refExpr: \"" + getRefDecl(expr.ref).name + "\" cannot be a Method");
         }
-        expr.ref.visit(this, arg);
         return null;
     }
     @Override
