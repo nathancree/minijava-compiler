@@ -26,6 +26,7 @@ public class Identification implements Visitor<Object,Object> {
     public Identification(ErrorReporter errors, Package _package) {
         this._errors = errors;
         si = new ScopedIdentification(_errors, _package.classDeclList);
+        currentClass = _package.classDeclList.get(0);
         try {
             addPredefinedClasses();
         } catch (Exception e) {
@@ -162,7 +163,7 @@ public class Identification implements Visitor<Object,Object> {
     }
     @Override
     public Object visitFieldDecl(FieldDecl f, Object arg){
-        f.type.visit(this, arg);
+        f.type.visit(this, f);
         return null;
     }
     @Override
@@ -173,30 +174,30 @@ public class Identification implements Visitor<Object,Object> {
 
         for (ParameterDecl pd: pdl) {
             if (pd.type.typeKind == TypeKind.CLASS) {
-                pd.type.visit(this, arg);
+                pd.type.visit(this, m);
                 assert pd.type instanceof ClassType;
                 si.addDeclaration(((ClassType) pd.type).className.getName() + pd.name, pd);
             } else {
-                pd.visit(this, arg);
+                pd.visit(this, m);
             }
         }
         StatementList sl = m.statementList;
         for (Statement s: sl) {
-            s.visit(this, arg);
+            s.visit(this, m);
         }
         si.closeScope();
         return null;
     }
     @Override
     public Object visitParameterDecl(ParameterDecl pd, Object arg){
-        assert arg instanceof ClassDecl;
-        si.addDeclaration(((ClassDecl) arg).name + pd.name, pd);
+//        assert arg instanceof ClassDecl;
+//        si.addDeclaration(((ClassDecl) arg).name + pd.name, pd);
+        si.addDeclaration(currentClass.name + pd.name, pd);
         pd.type.visit(this, arg);
         return null;
     }
     @Override
     public Object visitVarDecl(VarDecl vd, Object arg){
-        assert arg instanceof ClassDecl;
         si.addDeclaration(vd.name, vd);
         vd.type.visit(this, arg);
         return null;
@@ -363,7 +364,11 @@ public class Identification implements Visitor<Object,Object> {
     ///////////////////////////////////////////////////////////////////////////////
     @Override
     public Object visitThisRef(ThisRef ref, Object arg) {
-        ref.declaration = (ClassDecl)arg;
+//        ref.declaration = (ClassDecl)arg;
+        ref.declaration = currentClass;
+        if (arg instanceof MethodDecl && ((MethodDecl)arg).isStatic) {
+            _errors.reportError("IdentificationError: Cannot reference \"this\" within a static context");
+        }
         return currentClass;
     }
     @Override
@@ -374,6 +379,11 @@ public class Identification implements Visitor<Object,Object> {
 //        }
         //check for static
         ref.declaration = ref.id.getDeclaration();
+        if (arg instanceof MethodDecl && ((MethodDecl)arg).isStatic) {
+            if (ref.declaration instanceof MemberDecl && !((MemberDecl)ref.declaration).isStatic) {
+                _errors.reportError("IdentificationError: Members of static methods must also be static");
+            }
+        }
         return null;
     }
     @Override
@@ -508,7 +518,7 @@ public class Identification implements Visitor<Object,Object> {
     ///////////////////////////////////////////////////////////////////////////////
     @Override
     public Declaration visitIdentifier(Identifier id, Object arg) { // wherever visitIdentifier is called pass Class context as arg and use that in findDeclaration
-        Declaration decl = si.findDeclaration(id, (ClassDecl) arg);
+        Declaration decl = si.findDeclaration(id, currentClass);
         if (decl == null) {
             decl = si.findClassDeclaration(id);
             if (decl == null) {
