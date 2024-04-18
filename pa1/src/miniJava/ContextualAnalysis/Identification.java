@@ -446,11 +446,19 @@ public class Identification implements Visitor<Object,Object> {
 
         if (idDecl == null) {
             _errors.reportError("IdentificationError: No declaration found for \"" + qr.id.getName() + "\" in QRef");
+            return null;
         }
 
         if (!(idDecl instanceof MemberDecl)) {
-      _errors.reportError(
-          "IdentificationError: RHS of QRef must be a MemberDecl but is instead \"" + idDecl + "\"");
+            _errors.reportError("IdentificationError: RHS of QRef must be a MemberDecl but is instead \"" + idDecl + "\"");
+            return null;
+        }
+
+        // Static check if LHS is ClassDecl
+
+        if (refDecl instanceof ClassDecl && idDecl instanceof MemberDecl && !((MemberDecl) idDecl).isStatic) {
+            _errors.reportError("IdentificationError: Trying to reference non-static \"" + ((MemberDecl) idDecl).name + "\" in a static context");
+            return null;
         }
 
 
