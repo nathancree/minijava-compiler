@@ -319,8 +319,8 @@ public class Identification implements Visitor<Object,Object> {
     @Override
     public Object visitRefExpr(RefExpr expr, Object arg){
         expr.ref.visit(this, arg);
-        if (getRefDecl(expr.ref) instanceof MethodDecl) {
-            _errors.reportError("IdentificationError: refExpr: \"" + getRefDecl(expr.ref).name + "\" cannot be a Method");
+        if (getRefDecl(expr.ref) instanceof MethodDecl || getRefDecl(expr.ref) instanceof ClassDecl) {
+            _errors.reportError("IdentificationError: refExpr: \"" + getRefDecl(expr.ref).name + "\" cannot be a Method or ClassDecl");
         }
         return null;
     }
