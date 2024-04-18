@@ -456,7 +456,7 @@ public class Identification implements Visitor<Object,Object> {
 
         // Static check if LHS is ClassDecl
 
-        if (refDecl instanceof ClassDecl && idDecl instanceof MemberDecl && !((MemberDecl) idDecl).isStatic) {
+        if (!(ref instanceof ThisRef) && refDecl instanceof ClassDecl && idDecl instanceof MemberDecl && !((MemberDecl) idDecl).isStatic) {
             _errors.reportError("IdentificationError: Trying to reference non-static \"" + ((MemberDecl) idDecl).name + "\" in a static context");
             return null;
         }
