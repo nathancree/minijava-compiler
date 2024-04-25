@@ -25,44 +25,44 @@ public class ELFMaker {
 	private long shStartAddress;
 	private long sdataStartAddress;
 	private long bssOffset;
-	
+
 	public ELFMaker(ErrorReporter errors, long textSize, long bssSize) {
 		this._errors = errors;
-		
+
 		// first section is the null section
 		sections.add( makeNullSection() );
-		
+
 		segments.add(phdr);
 		segments.add(textSeg);
-		
+
 		// next is the .text
 		text.sectionName = ".text";
 		text.sh_size = textSize;
-		text.sh_flags = ??; // TODO: what flags does the text section get?
-		text.sh_type = ??; // TODO: what type is the text section?
+		text.sh_flags = SHF_ALLOC | SHF_EXECINSTR; // TODO: what flags does the text section get?
+		text.sh_type = SHT_PROGBITS; // TODO: what type is the text section?
 		text.data = new byte[1]; // placeholder, do not change
 		sections.add( text );
-		
+
 		// make .bss
 		bss.sectionName = ".bss";
 		bss.data = null;
 		bss.sh_size = bssSize;
-		bss.sh_type = ??; // TODO: what type is the bss section?
-		bss.sh_flags = ??; // TODO: what are the flags of the bss section?
+		bss.sh_type = SHT_NOBITS; // TODO: what type is the bss section?
+		bss.sh_flags = SHF_ALLOC | SHF_WRITE; // TODO: what are the flags of the bss section?
 		sections.add( bss );
-		
+
 		// make .shstrtab
 		shstrtab.sectionName = ".shstrtab";
-		shstrtab.sh_type = ??; // TODO: what is the type of the shstrtab section?
-		shstrtab.sh_flags = ??; // TODO: what are the flags of this section?
+		shstrtab.sh_type = SHT_STRTAB; // TODO: what is the type of the shstrtab section?
+		shstrtab.sh_flags = 0; // TODO: what are the flags of this section?
 		sections.add( shstrtab );
 		shstrtab.data = makeSectionStrings(sections);
 		shstrtab.sh_size = shstrtab.data.length;
-		
+
 		// -=-=-=-=-=-
 		// No new segments/sections beyond this point
 		// -=-=-=-=-=-
-		
+
 		shStartAddress = phStartAddress + ( elf.e_phentsize * segments.size() );
 		sdataStartAddress = shStartAddress + ( elf.e_shentsize * sections.size() );
 		long pSectionSizes = 0;
@@ -77,59 +77,59 @@ public class ELFMaker {
 				pSectionSizes += sh.sh_size;
 			vSectionSizes += sh.sh_size;
 		}
-		
+
 		// I mean, it isn't really bss, it's got/plt, but it will eventually
 		// resolve to bss when we check RIP+(entry-textStart+textSize)
 		bssOffset = bss.sh_addr - text.sh_addr;
 	}
-	
+
 	// entrypoint offset from start of text section
 	public void outputELF(String fname, byte[] textSection, long entrypoint) {
 		if( textSection.length != text.sh_size )
 			throw new IllegalArgumentException("Passed text section does not match earlier sh_size");
-		
+
 		// -=-=-=-=-=-=-=-=-=-=-
 		//    NO MORE CHANGES BEYOND THIS POINT
 		// -=-=-=-=-=-=-=-=-=-=-
-		
+
 		text.data = textSection;
-		
-		phdr.p_type = ??; // TODO: what is the type of the program header segment?
-		phdr.p_flags = ??; // TODO: what are the flags of the program header segment?
+
+		phdr.p_type = PT_PHDR; // TODO: what is the type of the program header segment?
+		phdr.p_flags = PF_R | PF_X; // TODO: what are the flags of the program header segment?
 		phdr.p_offset = phStartAddress;
 		phdr.p_vaddr = phStartAddress;
 		phdr.p_paddr = phStartAddress;
 		phdr.p_filesz = segments.size() * elf.e_phentsize;
 		phdr.p_memsz = phdr.p_filesz;
-		
-		textSeg.p_type = ??; // TODO: type of the text segment?
-		textSeg.p_flags = ??; // TODO: flags for the text segment?
+
+		textSeg.p_type = PT_LOAD; // TODO: type of the text segment?
+		textSeg.p_flags = PF_R | PF_X; // TODO: flags for the text segment?
 		textSeg.p_offset = text.sh_offset;
 		textSeg.p_vaddr = text.sh_addr;
 		textSeg.p_paddr = text.sh_addr;
 		textSeg.p_filesz = text.sh_size;
 		textSeg.p_memsz = text.sh_size;
-		
+
 		elf.e_entry = text.sh_addr + entrypoint;
 		elf.e_shoff = shStartAddress;
 		elf.e_phnum = (short)segments.size();
 		elf.e_shnum = (short)sections.size();
 		elf.e_shstrndx = (short)shstrtab.secIdx;
-		
+
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		writeELF(out,elf);
 		for( ELFSegment ph : segments )
 			writeSegment(out,ph);
 		for( ELFSection sh : sections )
 			writeSection(out,sh);
-		
+
 		// dump out each section's data now
 		for( ELFSection sh : sections ) {
 			if( sh.data == null || sh.sh_size == 0 )
 				continue;
 			write(out,sh.data);
 		}
-		
+
 		try {
 			FileOutputStream f = new FileOutputStream(fname);
 			f.write( out.toByteArray() );
@@ -140,11 +140,11 @@ public class ELFMaker {
 			_errors.reportError("IOException: " + e);
 		}
 	}
-	
+
 	public long getBssOffset() {
 		return bssOffset;
 	}
-	
+
 	private byte[] makeSectionStrings(ArrayList<ELFSection> sections) {
 		ByteArrayOutputStream b = new ByteArrayOutputStream();
 		_b = b;
@@ -158,7 +158,7 @@ public class ELFMaker {
 		_b = null;
 		return b.toByteArray();
 	}
-	
+
 	private class ELF {
 		public int ei_magic = 0x464C457F; // 7F, 'E', 'L', 'F'
 		public byte ei_class = 0x02; // 64bit
@@ -181,7 +181,7 @@ public class ELFMaker {
 		public short e_shnum; // number of sections
 		public short e_shstrndx; // index of the shstrtab section
 	}
-	
+
 	private class ELFSegment {
 		public int p_type = 1; // 1=PT_LOAD, loadable segment, 6= PT_PHDR
 		public int p_flags; // 1, 2, 4 respectively X, W, R
@@ -192,7 +192,7 @@ public class ELFMaker {
 		public long p_memsz = 0; // size of the bytes in memory
 		public long p_align = 0; // alignment in memory
 	}
-	
+
 	private class ELFSection {
 		public int sh_name; // offset in .shstrtab section
 		public int sh_type; // 0x01= program data, 0x03= string table, 0x08=SHT_NOBITS
@@ -204,13 +204,13 @@ public class ELFMaker {
 		public int sh_info = 0; // extra info, not needed
 		public long sh_addralign = 0; // section alignment, must be power of 2
 		public long sh_entsize = 0; // size of each entry for sections that have fixed-size entries
-		
+
 		// these aren't a part of the table entry
 		public String sectionName;
 		public byte[] data;
 		public int secIdx;
 	}
-	
+
 	private void writeELF(ByteArrayOutputStream b, ELF e) {
 		_b = b;
 		write(e.ei_magic);
@@ -235,7 +235,7 @@ public class ELFMaker {
 		write(e.e_shstrndx);
 		_b = null;
 	}
-	
+
 	private void writeSegment(ByteArrayOutputStream b, ELFSegment e) {
 		_b = b;
 		write(e.p_type);
@@ -248,7 +248,7 @@ public class ELFMaker {
 		write(e.p_align);
 		_b = null;
 	}
-	
+
 	private void writeSection(ByteArrayOutputStream b, ELFSection e) {
 		_b = b;
 		write(e.sh_name);
@@ -263,7 +263,7 @@ public class ELFMaker {
 		write(e.sh_entsize);
 		_b = null;
 	}
-	
+
 	// Below are methods to maximize laziness
 	private ByteArrayOutputStream _b = null;
 	private void write(int v) {
@@ -302,7 +302,7 @@ public class ELFMaker {
 	private void write(ByteArrayOutputStream b, String v) {
 		x64.writeString(b, v);
 	}
-	
+
 	private static final int PT_NULL 	= 0;
 	private static final int PT_LOAD 	= 1;
 	private static final int PT_DYNAMIC = 2;
@@ -310,11 +310,11 @@ public class ELFMaker {
 	//private static final int PT_SHLIB = 5;
 	private static final int PT_PHDR 	= 6;
 	private static final int PT_TLS 	= 7;
-	
+
 	private static final int PF_X = 1;
 	private static final int PF_W = 2;
 	private static final int PF_R = 4;
-	
+
 	private static final int SHT_NULL 	= 0x00;
 	private static final int SHT_PROGBITS = 0x01;
 	private static final int SHT_SYMTAB = 0x02;
@@ -325,21 +325,21 @@ public class ELFMaker {
 	private static final int SHT_NOBITS = 0x08;
 	private static final int SHT_REL 	= 0x09;
 	private static final int SHT_DYNSYM = 0x0B;
-	
+
 	private static final long SHF_WRITE 	= 0x01;
 	private static final long SHF_ALLOC 	= 0x02;
 	private static final long SHF_EXECINSTR = 0x04;
 	private static final long SHF_STRINGS 	= 0x20;
 	private static final long SHF_INFO_LINK = 0x40;
 	private static final long SHF_LINK_ORDER = 0x80;
-	
+
 	private ELFSection makeNullSection() {
 		ELFSection e = new ELFSection();
 		e.sectionName = null;
 		e.data = null;
-		
+
 		e.sh_name = 0;
-		e.sh_type = ??; // TODO: what type is the null section?
+		e.sh_type = SHT_NULL; // TODO: what type is the null section?
 		e.sh_flags = 0;
 		e.sh_addr = 0;
 		e.sh_offset = 0;

@@ -14,6 +14,8 @@ public class ClassDecl extends Declaration {
 	  fieldDeclList = fdl;
 	  methodDeclList = mdl;
   }
+
+  public int basePtr;
   
   public <A,R> R visit(Visitor<A, R> v, A o) {
       return v.visitClassDecl(this, o);
