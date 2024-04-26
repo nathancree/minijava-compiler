@@ -197,12 +197,27 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	@Override
 	public Object visitMethodDecl(MethodDecl m, Object o){
 		m.address = _asm.getSize();
-		// TODO: Patch everything
+
+		// patch calls that were made before method was visited
+		for (Instruction i : m.instrList) {
+			_asm.patch(i.listIdx, new Call(i.startAddress, m.address));
+		}
 		// localVar counter to assign offset
 		// the nth localVar will have an offset of n * -8 which will be what needs to be added to rbp to access it
 		int varCount = 0;
+
+
+		int thisOnStack = 0;
+    	if (!m.isStatic) // if non-static method, 'this' is on stack
+			thisOnStack = 1;
+
 		_asm.add( new Push( Reg64.RBP ) ); // push old rbp onto stack
 		_asm.add( new Mov_rmr( new R(Reg64.RBP, Reg64.RSP) ) ); // update rbp to point to wherever rsp is pointing to
+
+		for (int i = m.parameterDeclList.size() - 1; i >= 0; i--) { // loop through the list and give params their offset
+			m.parameterDeclList.get(i).offset = (i + 1 + thisOnStack) * 8; // ith param is offset from rbp by i + ra + 'this' (if static) spots
+		}
+
 		for (Statement s : m.statementList) {
 			if (s instanceof VarDeclStmt) {
 				_asm.add( new Push(0) ); // allocate room on stack before storing local var in it
@@ -212,6 +227,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 			}
 			s.visit(this, o);
 		}
+
 		// update rsp to pnt to rbp (top of call stack, where old rbp was stored)
 		_asm.add( new Mov_rmr( new R(Reg64.RSP, Reg64.RBP) ) );
 		_asm.add( new Pop( Reg64.RBP ) );	// restore old rbp val
@@ -222,7 +238,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 			_asm.add( new Syscall() );
 		}
 
-		_asm.add( new Ret() ); // return from method
+		_asm.add( new Ret( (short)(m.parameterDeclList.size() + thisOnStack) ) ); // return from method
 
 
 		return null;
@@ -278,7 +294,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				-> varDecl = FieldDecl
 		----------------------------------*/
 		int offset = 0;
-		boolean isStatic = false;
+//		boolean isStatic = false;
 		stmt.ref.visit(this, true); // true if we want the ref to return an address
 		stmt.val.visit(this, o); // will return the value of the expr being visited
 
@@ -297,8 +313,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				return null;
 			}
 		} else if (stmt.ref instanceof QualRef) {	// if assigning to instance vars
-			QualRef ref = (QualRef) stmt.ref;
-			_asm.add( new Mov_rmr( new R(Reg64.RDI, Reg64.RBX) ) ); // TODO: Check this later with a fresh brain
+//			QualRef ref = (QualRef) stmt.ref;
+			_asm.add( new Mov_rmr( new R(Reg64.RDI, Reg64.RBX) ) );
 			return null;
 		} else {
 			// Should never go here?
@@ -362,19 +378,18 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	@Override
 	public Object visitReturnStmt(ReturnStmt stmt, Object o){
 		if (stmt.returnExpr != null) {
-			stmt.returnExpr.visit(this, o); // This should leave result in rax
+			stmt.returnExpr.visit(this, o);
 			_asm.add( new Pop(Reg64.RAX) );
 		} else {
 			// rax == null;??
 		}
 
 
-		// code for leaving function -> mov rsp rbp -> pop rbp -> ret
-		_asm.add( new Mov_rmr(new R(Reg64.RSP, Reg64.RBP) ) );
-		_asm.add( new Pop(Reg64.RBP) );
-		_asm.add( new Ret() );
+//		// code for leaving function -> mov rsp rbp -> pop rbp -> ret
+//		_asm.add( new Mov_rmr(new R(Reg64.RSP, Reg64.RBP) ) );
+//		_asm.add( new Pop(Reg64.RBP) );
+//		_asm.add( new Ret() );
 
-		// TODO: Clean up stack
 		return null;
 	}
 	@Override
@@ -440,59 +455,39 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	public Object visitBinaryExpr(BinaryExpr expr, Object o){
 		expr.operator.visit(this, o);
 		expr.left.visit(this, o);
-//		_asm.add( new Mov_rrm( new R(Reg64.RAX, Reg64.RBX) ) ); // store lhs of binop in RBX
-//		_asm.add( new Push( Reg64.RAX) );
 		expr.right.visit(this, o); // rhs of binop in RAX
-		_asm.add( new Pop(Reg64.RAX) ); // rhs in RAX
-		_asm.add( new Pop(Reg64.RBX) ); // lhs in RBX
-
-
-		// TODO: Ask about setCondition
-		_asm.add( new Xor( new R(Reg64.RBX, Reg64.RBX) ) );
-//		if (Condition.getCond(expr.operator) != null do comparisons else do ands and stuff)
-		_asm.add( new SetCond( Condition.getCond(expr.operator), Reg8.DL) );
+		_asm.add( new Pop(Reg64.RBX) ); // rhs in RBX
+		_asm.add( new Pop(Reg64.RAX) ); // lhs in RAX
 
 
 
+		Condition cond = Condition.getCond(expr.operator);
+		if (cond != null) { // if operator does a comparison
+			_asm.add( new Xor( new R(Reg64.RDX, Reg64.RDX) ) );
+			_asm.add( new SetCond( Condition.getCond(expr.operator), Reg8.DL) );
+			_asm.add( new Cmp( new R(Reg64.RAX, Reg64.RBX) ) );
+			_asm.add( new Push(Reg64.RAX) );
+			return null;
+		}
 
-
-		// TODO: Do operator to lhs and rhs and then store result in RAX
 		switch (expr.operator.spelling) {
 			case "+":
 				_asm.add( new Add(new R(Reg64.RAX, Reg64.RBX) ) );
 				break;
 			case "-":
-
+				_asm.add( new Sub( new R(Reg64.RAX, Reg64.RBX) ) );
 				break;
 			case "||":
-
+				_asm.add( new Or( new R(Reg64.RAX, Reg64.RBX) ) );
 				break;
 			case "&&":
-
-				break;
-			case "==":
-
-				break;
-			case "!=":
-
-				break;
-			case "<=":
-
-				break;
-			case "<":
-
-				break;
-			case ">":
-
-				break;
-			case ">=":
-
+				_asm.add( new And( new R(Reg64.RAX, Reg64.RBX) ) );
 				break;
 			case "*":
-
+				_asm.add( new Imul( new R(Reg64.RAX, Reg64.RBX) ) );
 				break;
 			case "/":
-
+				_asm.add( new Idiv( new R(Reg64.RAX, Reg64.RBX) ) );
 				break;
 		}
 		_asm.add( new Push(Reg64.RAX) );
@@ -531,7 +526,6 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	}
 	@Override
 	public Object visitCallExpr(CallExpr expr, Object o) {
-		// TODO:
 		// This is where methods get called ( I say just visit the method lwk)
 		/*
 		if we know method Decl address cmp to method decl address

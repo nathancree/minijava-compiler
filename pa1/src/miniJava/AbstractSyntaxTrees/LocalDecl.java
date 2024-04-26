@@ -13,4 +13,6 @@ public abstract class LocalDecl extends Declaration {
 		super(name,t,posn);
 	}
 
+	public int offset;
+
 }
