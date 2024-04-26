@@ -464,31 +464,21 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		Condition cond = Condition.getCond(expr.operator);
 		if (cond != null) { // if operator does a comparison
 			_asm.add( new Xor( new R(Reg64.RDX, Reg64.RDX) ) );
-			_asm.add( new SetCond( Condition.getCond(expr.operator), Reg8.DL) );
+			_asm.add( new SetCond( cond, Reg8.DL) );
 			_asm.add( new Cmp( new R(Reg64.RAX, Reg64.RBX) ) );
 			_asm.add( new Push(Reg64.RAX) );
 			return null;
 		}
 
 		switch (expr.operator.spelling) {
-			case "+":
-				_asm.add( new Add(new R(Reg64.RAX, Reg64.RBX) ) );
-				break;
-			case "-":
-				_asm.add( new Sub( new R(Reg64.RAX, Reg64.RBX) ) );
-				break;
-			case "||":
-				_asm.add( new Or( new R(Reg64.RAX, Reg64.RBX) ) );
-				break;
-			case "&&":
-				_asm.add( new And( new R(Reg64.RAX, Reg64.RBX) ) );
-				break;
-			case "*":
-				_asm.add( new Imul( new R(Reg64.RAX, Reg64.RBX) ) );
-				break;
-			case "/":
-				_asm.add( new Idiv( new R(Reg64.RAX, Reg64.RBX) ) );
-				break;
+			case "+" -> _asm.add( new Add( new R(Reg64.RAX, Reg64.RBX) ) );
+			case "-" -> _asm.add( new Sub( new R(Reg64.RAX, Reg64.RBX) ) );
+			case "||" -> _asm.add( new Or( new R(Reg64.RAX, Reg64.RBX) ) );
+			case "&&" -> _asm.add( new And( new R(Reg64.RAX, Reg64.RBX) ) );
+//			case "*" -> _asm.add( new Imul( new R(Reg64.RAX, Reg64.RBX) ) );
+			case "*" -> _asm.add( new Imul( new R(Reg64.RBX, true) ) );
+//			case "/" -> _asm.add( new Idiv( new R(Reg64.RAX, Reg64.RBX) ) );
+			case "/" -> _asm.add( new Idiv( new R(Reg64.RBX, true) ) );
 		}
 		_asm.add( new Push(Reg64.RAX) );
 		return null;
