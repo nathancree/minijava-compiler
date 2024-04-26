@@ -7,8 +7,8 @@ import miniJava.CodeGeneration.x64.x64;
 
 public class Push extends Instruction {
 	public Push(int imm) {
-		// TODO: how can we do a push imm32 (CHECK FOR ADDITIONAL REQUIREMENTS)
 		opcodeBytes.write(0x68);
+		x64.writeInt(immBytes, imm);
 	}
 	
 	public Push(Reg64 reg) {

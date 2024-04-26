@@ -5,10 +5,15 @@
  */
 package miniJava.AbstractSyntaxTrees;
 
+import miniJava.CodeGeneration.x64.Instruction;
+import miniJava.CodeGeneration.x64.InstructionList;
 import miniJava.SyntacticAnalyzer.SourcePosition;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MethodDecl extends MemberDecl {
-	
+
 	public MethodDecl(MemberDecl md, ParameterDeclList pl, StatementList sl, SourcePosition posn){
     super(md,posn);
     parameterDeclList = pl;
@@ -21,5 +26,6 @@ public class MethodDecl extends MemberDecl {
 	
 	public ParameterDeclList parameterDeclList;
 	public StatementList statementList;
-    public int offset;
+    public int address = -1;
+    public List<Instruction> instrList = new ArrayList<>();
 }

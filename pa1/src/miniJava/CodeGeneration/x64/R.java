@@ -157,10 +157,10 @@ public class R /* Formally ModRMSIB */ {
 	// [rdisp+disp],r
 	private void Make(Reg64 rdisp, int disp, Reg r) {
 		// Operands: [rdisp+disp],r
-		int mod = 1;
-		if (disp > 127  || disp < -128) { // if disp uses more than 8 bytes
-			mod = 2;
-		}
+		int mod = 2;
+//		if (disp > 127  || disp < -128) { // if disp uses more than 8 bytes
+//			mod = 2;
+//		}
 
 		int regByte = mod << 6 | getIdx(r) << 3 | getIdx(rdisp);
 		_b.write(regByte); // write the regByte made from rdisp and r
@@ -213,10 +213,10 @@ public class R /* Formally ModRMSIB */ {
 			throw new IllegalArgumentException("Index cannot be rsp");
 		
 		// Operands: [rdisp + ridx*mult + disp], r
-		int mod = 1, ss;
-		if (disp > 127  || disp < -128) { // if disp uses more than 8 bytes
-			mod = 2;
-		}
+		int mod = 2, ss;
+//		if (disp > 127  || disp < -128) { // if disp uses more than 8 bytes
+//			mod = 2;
+//		}
 		if (mult == 1) {
 			ss = 0;
 		} else if (mult == 2) {

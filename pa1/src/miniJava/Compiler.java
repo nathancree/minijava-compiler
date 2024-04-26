@@ -4,6 +4,7 @@ import miniJava.AbstractSyntaxTrees.AST;
 import miniJava.AbstractSyntaxTrees.ASTDisplay;
 import miniJava.AbstractSyntaxTrees.ClassDecl;
 import miniJava.AbstractSyntaxTrees.Package;
+import miniJava.CodeGeneration.CodeGenerator;
 import miniJava.ContextualAnalysis.Identification;
 import miniJava.ContextualAnalysis.TypeChecking;
 import miniJava.SyntacticAnalyzer.Parser;
@@ -59,8 +60,9 @@ public class Compiler {
       TypeChecking typeChecker = new TypeChecking(errorReports);
       typeChecker.parse(prog);
 
-      // TODO: Check if any errors exist, if so, println("Error")
-      //  then output the errors
+      CodeGenerator codeGen = new CodeGenerator(errorReports);
+      codeGen.parse(prog);
+
       if (errorReports.hasErrors()) {
         System.out.println("Error");
         errorReports.outputErrors();
@@ -71,6 +73,5 @@ public class Compiler {
         //      display.showTree(ast);
       }
     }
-
   }
 }
