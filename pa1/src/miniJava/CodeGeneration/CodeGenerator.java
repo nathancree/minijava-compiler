@@ -395,7 +395,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	@Override
 	public Object visitIfStmt(IfStmt stmt, Object o){
 		// should evaluate to be a literalExpression at heart (true = 1) (false = 0);
-		stmt.cond.visit(this, o); // true or false result stored in rax
+		stmt.cond.visit(this, o); // true or false result stored on stack
+		_asm.add( new Pop(Reg64.RAX) );
 
 		// evaluate condition
 		_asm.add( new Cmp( new R(Reg64.RAX, true), 0) );
@@ -404,11 +405,15 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		_asm.add( jmp );
 
 		stmt.thenStmt.visit(this, o);
+		Instruction jmpPastElse = new Jmp(0);
+		_asm.add( jmpPastElse );
 
 		// TODO: Check if the startAddress and destAddress (_asm.size()) are in the right places?
+//		_asm.patch( jmp.listIdx, new CondJmp(Condition.E, _asm.getSize(), jmp.startAddress, false));
 		_asm.patch( jmp.listIdx, new CondJmp(Condition.E, jmp.startAddress, _asm.getSize(), false));
 		if (stmt.elseStmt != null)
 			stmt.elseStmt.visit(this, o);
+		_asm.patch(jmpPastElse.listIdx, new Jmp(jmpPastElse.startAddress, _asm.getSize(), false));
 		return null;
 	}
 	@Override
