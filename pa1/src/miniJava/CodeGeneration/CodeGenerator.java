@@ -7,6 +7,7 @@ import miniJava.CodeGeneration.x64.*;
 import miniJava.CodeGeneration.x64.ISA.*;
 
 import javax.sql.rowset.RowSetMetaDataImpl;
+import javax.swing.*;
 import java.lang.reflect.Method;
 import java.nio.ReadOnlyBufferException;
 import java.util.RandomAccess;
@@ -427,7 +428,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	@Override
 	public Object visitIfStmt(IfStmt stmt, Object o){
     // should evaluate to be a literalExpression at heart (true = 1) (false = 0);
-    System.out.println("start");
+    System.out.println("START IFSTMT");
 	_asm.markOutputStart();
 		stmt.cond.visit(this, o); // true or false result stored on stack
 		_asm.add( new Pop(Reg64.RAX) );
@@ -450,7 +451,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 			_asm.patch(jmpPastElse.listIdx, new Jmp(jmpPastElse.startAddress, _asm.getSize(), false));
 		}
 		_asm.outputFromMark();
-    System.out.println("finish");
+    System.out.println("END IFSTMT");
 		return null;
 	}
 	@Override
@@ -495,6 +496,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	}
 	@Override
 	public Object visitBinaryExpr(BinaryExpr expr, Object o){
+//    System.out.println("START BINEXPR");
 		expr.operator.visit(this, o);
 		expr.left.visit(this, o);
 		expr.right.visit(this, o); // rhs of binop in RAX
@@ -506,10 +508,9 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		Condition cond = Condition.getCond(expr.operator);
 		if (cond != null) { // if operator does a comparison
 			_asm.add( new Xor( new R(Reg64.RDX, Reg64.RDX) ) );
-			_asm.add( new SetCond( cond, Reg8.DL) );
-//			_asm.add( new Cmp( new R(Reg64.RAX, Reg64.RDX) ) );
-//			_asm.add( new Cmp( new R(Reg64.RBX, Reg64.RDX) ) );
 			_asm.add( new Cmp( new R(Reg64.RAX, Reg64.RBX) ) );
+			_asm.add( new SetCond( cond, Reg8.DL) );
+			_asm.add( new Mov_rmr( new R(Reg64.RAX, Reg8.DL) ) );
 			_asm.add( new Push(Reg64.RAX) );
 			return null;
 		}
