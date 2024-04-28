@@ -41,18 +41,21 @@ public class Compiler {
     Package prog = parser.parse();
 
     // JUST TESTING THIS FOR FUN DO NOT MIND THIS
-//    for (ClassDecl c : prog.classDeclList) {
-//      if (c.name.contains("ail")) {
-//        System.out.println("Error");
-//        return;
-//      } else {
-//        System.out.println("Success");
-//        return;
-//      }
-//    }
-
-    Identification identification = new Identification(errorReports, prog);
-    identification.parse(prog);
+    //    for (ClassDecl c : prog.classDeclList) {
+    //      if (c.name.contains("ail")) {
+    //        System.out.println("Error");
+    //        return;
+    //      } else {
+    //        System.out.println("Success");
+    //        return;
+    //      }
+    //    }
+    if (prog != null) {
+      Identification identification = new Identification(errorReports, prog);
+      identification.parse(prog);
+    } else {
+      errorReports.reportError("Parsing error: Could not parse package");
+    }
     if (errorReports.hasErrors()) {
       System.out.println("Error");
       errorReports.outputErrors();

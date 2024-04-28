@@ -68,12 +68,17 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		//  Note the false means that it is a 32-bit immediate for jumping (an int)
 		//     _asm.patch( someJump.listIdx, new Jmp(asm.size(), someJump.startAddress, false) );
 		int staticFieldCount = 0;
+		int fieldCount = 0;
 		for (ClassDecl c : prog.classDeclList) {
 			for (FieldDecl f: c.fieldDeclList) {
 				if (f.isStatic) {
 					staticFieldCount++;
 					_asm.add( new Push(0) ); // update rsp
 					f.offset = staticFieldCount * -8; // update relative offset (from r15 because they're fields ya know)
+				} else {
+					fieldCount++;
+//					_asm.add( new Push(0) ); // update rsp
+					f.offset = fieldCount * 8;
 				}
 //				f.visit(this, c);
 //			_asm.add(new Push(0));
@@ -81,6 +86,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 //			_asm.add( new Mov_rmr(new R(Reg64.RBP, -8, Reg64.RAX)));
 //			f.visit(this, clas);
 			}
+			fieldCount = 0;
 		}
 
 		prog.visit(this,null);
@@ -158,7 +164,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		/*
 
 		---------------Don't Need This because we are not actually creating the objects?---------------
-		- clas has it's own pointer (basePtr) that points to where the start of all instance vars are located
+		- clas has it's own pointer  (basePtr) that points to where the start of all instance vars are located
 		- fieldCount = a counter that tracks the number of fields visited
 		- staticFieldCount = a counter that tracks the number of static fields visiited
 		- for each non-static field:
@@ -314,8 +320,10 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				return null;
 			}
 		} else if (stmt.ref instanceof QualRef) {	// if assigning to instance vars
-//			QualRef ref = (QualRef) stmt.ref;
-			_asm.add( new Mov_rmr( new R(Reg64.RDI, Reg64.RBX) ) );
+			QualRef ref = (QualRef) stmt.ref;
+			Declaration decl = ref.id.getDeclaration();
+			_asm.add( new Mov_rmr( new R(Reg64.RDI, Reg64.RBX) ) ); // offset accounted for already in visitQRef?
+//			_asm.add( new Mov_rmr( new R(Reg64.RDI, ((FieldDecl)decl).offset, Reg64.RBX) ) );
 			return null;
 		} else {
 			// Should never go here?
@@ -398,33 +406,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 
 		return null;
 	}
-//	@Override
-//	public Object visitIfStmt(IfStmt stmt, Object o){
-//		// should evaluate to be a literalExpression at heart (true = 1) (false = 0);
-//		stmt.cond.visit(this, o); // true or false result stored on stack
-//		_asm.add( new Pop(Reg64.RAX) );
-//
-//		// evaluate condition
-//		_asm.add( new Cmp( new R(Reg64.RAX, true), 0) );
-//
-//
-//		// TODO: Make sure the condition is not getting accidentally set when visiting statements, check to make sure jmps are in the right spot
-//		Instruction jmp = new CondJmp(Condition.E, 0); // 32-bit offset conditional jump to nowhere if cond is false
-//		_asm.add( jmp );
-//
-//		stmt.thenStmt.visit(this, o);
-//		Instruction jmpPastElse = new CondJmp(Condition.E, 1); // if condition == true jump past else
-//		_asm.add( jmpPastElse );
-//
-//		// TODO: Check if the startAddress and destAddress (_asm.size()) are in the right places?
-////		_asm.patch( jmp.listIdx, new CondJmp(Condition.E, _asm.getSize(), jmp.startAddress, false));
-//		_asm.patch( jmp.listIdx, new CondJmp(Condition.E, jmp.startAddress, _asm.getSize(), false));
-//		if (stmt.elseStmt != null) {
-//			stmt.elseStmt.visit(this, o);
-//			_asm.patch(jmpPastElse.listIdx, new CondJmp(Condition.E, jmpPastElse.startAddress, _asm.getSize(), false));
-//		}
-//		return null;
-//	}
+
 	@Override
 	public Object visitIfStmt(IfStmt stmt, Object o){
     // should evaluate to be a literalExpression at heart (true = 1) (false = 0);
@@ -456,20 +438,21 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	}
 	@Override
 	public Object visitWhileStmt(WhileStmt stmt, Object o){
-		// TODO:
-		// MARK: Do I need to visit the condition every single time? How do I recheck the condition at the beginning of each loop?
+    System.out.println("START:   WHILE LOOP");
+	_asm.markOutputStart();
+		int beforeLoopIdx = _asm.getSize(); // to jump back to
+
 		stmt.cond.visit(this, o); // true (1) or false (0) stored on stack
-
-		Instruction condJmp = new CondJmp(Condition.E, 0);
-
+		_asm.add( new Pop(Reg64.RAX) );
 		_asm.add( new Cmp( new R(Reg64.RAX, true), 0) );
-
-
+		Instruction condJmp = new CondJmp(Condition.E, 0); // jump to end of while loop if the condition is false
 
 		stmt.body.visit(this, o);
-		_asm.add( new Jmp(_asm.getSize(), condJmp.startAddress, false) ); // jump to beginning of whileloop?
+		_asm.add( new Jmp(_asm.getSize(), beforeLoopIdx, false) ); // jump to beginning of whileloop
 
 		_asm.patch( condJmp.listIdx, new CondJmp(Condition.E, condJmp.startAddress, _asm.getSize(), false)); // while loop jumps to after body when condition is not met
+		_asm.outputFromMark();
+		System.out.println("END:   WHILE LOOP");
 		return null;
 	}
 
@@ -639,18 +622,18 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		 */
 
 //		expr.classtype.visit(this, o);
-		int field = 0;
-		ClassDecl newO = visitClassType(expr.classtype, o);
+//		int field = 0;
+//		ClassDecl newO = visitClassType(expr.classtype, o);
 
 //		_asm.add( new Push(0) );
 		makeMalloc(); // pointer to newly allocated memory is in rax
 //		_asm.add( new Mov_rmr( new R(Reg64.RBP, -8, Reg64.RAX) ) );
-		for (FieldDecl f : newO.fieldDeclList) {
-			if (!f.isStatic) {
-				field++;
-				f.offset = field * 8;
-			}
-		}
+//		for (FieldDecl f : newO.fieldDeclList) {
+//			if (!f.isStatic) {
+//				field++;
+//				f.offset = field * 8;
+//			}
+//		}
       // when returned from this instruction the new object being created will be represented by a
       // ptr in RAX
 		_asm.add( new Push(Reg64.RAX) );
@@ -705,7 +688,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	@Override
 	public Object visitQRef(QualRef qr, Object o) { // returns address
 		// pass argument into qualRef to read memory or get address
-		qr.ref.visit(this, o);
+		qr.ref.visit(this, null);
 		_asm.add( new Pop(Reg64.RBX) ); // starting heap address in rbx
 //		_asm.add( new Mov_rrm( new R(Reg64.RAX, Reg64.RBX) ) ); // store object's address in rbx
 
