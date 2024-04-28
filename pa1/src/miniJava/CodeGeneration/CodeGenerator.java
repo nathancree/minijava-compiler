@@ -268,7 +268,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	}
 	@Override
 	public Object visitVardeclStmt(VarDeclStmt stmt, Object o){
-		stmt.varDecl.visit(this, o);
+//		stmt.varDecl.visit(this, o);
 		if (stmt.initExp != null) {
 			stmt.initExp.visit(this, o);
 			_asm.add( new Pop(Reg64.RAX) );
@@ -324,11 +324,16 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	}
 	@Override
 	public Object visitIxAssignStmt(IxAssignStmt stmt, Object o){
-		stmt.ref.visit(this, o);
-		_asm.add( new Mov_rrm( new R(Reg64.RAX, Reg64.RBX))); // rbx = array address
+		stmt.ref.visit(this, true); // = address of array // Mark: Might need to change argument to true or false?
+//		_asm.add( new Mov_rrm( new R(Reg64.RAX, Reg64.RBX))); // rbx = array address
 		stmt.ix.visit(this, o);
-		_asm.add( new Mov_rrm( new R(Reg64.RAX, Reg64.RCX) ) ); //rcx = index
+//		_asm.add( new Mov_rrm( new R(Reg64.RAX, Reg64.RCX) ) ); //rcx = index
 		stmt.exp.visit(this, o);
+
+		_asm.add( new Pop(Reg64.RAX) ); // rax = expr
+		_asm.add( new Pop(Reg64.RCX) ); // rcx = index
+		_asm.add( new Pop(Reg64.RBX) ); // rbx = address of array
+
 
 		// load address of array[index] -> lea rdx, [rbx + rcx*8]
 		_asm.add( new Lea( new R(Reg64.RBX, Reg64.RCX, 8, 0, Reg64.RDX) ) );
@@ -350,8 +355,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 
 		// store params in reverse order on stack
 		for (int i = stmt.argList.size() - 1; i >= 0; i--) {
-			stmt.argList.get(i).visit(this, o); // result stored in rax
-			_asm.add( new Push(Reg64.RAX) );	// push param to the stack in reverse order
+			stmt.argList.get(i).visit(this, o); // result stored on stack already?
+//			_asm.add( new Push(Reg64.RAX) );	// push param to the stack in reverse order
 		}
 
 		MethodDecl md;
@@ -392,28 +397,60 @@ public class CodeGenerator implements Visitor<Object, Object> {
 
 		return null;
 	}
+//	@Override
+//	public Object visitIfStmt(IfStmt stmt, Object o){
+//		// should evaluate to be a literalExpression at heart (true = 1) (false = 0);
+//		stmt.cond.visit(this, o); // true or false result stored on stack
+//		_asm.add( new Pop(Reg64.RAX) );
+//
+//		// evaluate condition
+//		_asm.add( new Cmp( new R(Reg64.RAX, true), 0) );
+//
+//
+//		// TODO: Make sure the condition is not getting accidentally set when visiting statements, check to make sure jmps are in the right spot
+//		Instruction jmp = new CondJmp(Condition.E, 0); // 32-bit offset conditional jump to nowhere if cond is false
+//		_asm.add( jmp );
+//
+//		stmt.thenStmt.visit(this, o);
+//		Instruction jmpPastElse = new CondJmp(Condition.E, 1); // if condition == true jump past else
+//		_asm.add( jmpPastElse );
+//
+//		// TODO: Check if the startAddress and destAddress (_asm.size()) are in the right places?
+////		_asm.patch( jmp.listIdx, new CondJmp(Condition.E, _asm.getSize(), jmp.startAddress, false));
+//		_asm.patch( jmp.listIdx, new CondJmp(Condition.E, jmp.startAddress, _asm.getSize(), false));
+//		if (stmt.elseStmt != null) {
+//			stmt.elseStmt.visit(this, o);
+//			_asm.patch(jmpPastElse.listIdx, new CondJmp(Condition.E, jmpPastElse.startAddress, _asm.getSize(), false));
+//		}
+//		return null;
+//	}
 	@Override
 	public Object visitIfStmt(IfStmt stmt, Object o){
-		// should evaluate to be a literalExpression at heart (true = 1) (false = 0);
+    // should evaluate to be a literalExpression at heart (true = 1) (false = 0);
+    System.out.println("start");
+	_asm.markOutputStart();
 		stmt.cond.visit(this, o); // true or false result stored on stack
 		_asm.add( new Pop(Reg64.RAX) );
 
 		// evaluate condition
 		_asm.add( new Cmp( new R(Reg64.RAX, true), 0) );
 
-		Instruction jmp = new CondJmp(Condition.E, 0); // 32-bit offset conditional jump to nowhere
+
+		Instruction jmp = new CondJmp(Condition.E, 0); // 32-bit offset conditional jump to nowhere if cond is false
 		_asm.add( jmp );
 
 		stmt.thenStmt.visit(this, o);
-		Instruction jmpPastElse = new Jmp(0);
+
+		Instruction jmpPastElse = new Jmp(0); // if condition == true jump past else
 		_asm.add( jmpPastElse );
 
-		// TODO: Check if the startAddress and destAddress (_asm.size()) are in the right places?
-//		_asm.patch( jmp.listIdx, new CondJmp(Condition.E, _asm.getSize(), jmp.startAddress, false));
 		_asm.patch( jmp.listIdx, new CondJmp(Condition.E, jmp.startAddress, _asm.getSize(), false));
-		if (stmt.elseStmt != null)
+		if (stmt.elseStmt != null) {
 			stmt.elseStmt.visit(this, o);
-		_asm.patch(jmpPastElse.listIdx, new Jmp(jmpPastElse.startAddress, _asm.getSize(), false));
+			_asm.patch(jmpPastElse.listIdx, new Jmp(jmpPastElse.startAddress, _asm.getSize(), false));
+		}
+		_asm.outputFromMark();
+    System.out.println("finish");
 		return null;
 	}
 	@Override
@@ -470,6 +507,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		if (cond != null) { // if operator does a comparison
 			_asm.add( new Xor( new R(Reg64.RDX, Reg64.RDX) ) );
 			_asm.add( new SetCond( cond, Reg8.DL) );
+//			_asm.add( new Cmp( new R(Reg64.RAX, Reg64.RDX) ) );
+//			_asm.add( new Cmp( new R(Reg64.RBX, Reg64.RDX) ) );
 			_asm.add( new Cmp( new R(Reg64.RAX, Reg64.RBX) ) );
 			_asm.add( new Push(Reg64.RAX) );
 			return null;
@@ -517,7 +556,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	@Override
 	public Object visitIxExpr(IxExpr ie, Object o){
 		ie.ref.visit(this, o);
-		_asm.add( new Pop(Reg64.RBX) );
+//		_asm.add( new Pop(Reg64.RBX) );
 //		_asm.add( new Mov_rrm( new R(Reg64.RAX, Reg64.RBX) ) ); // moves RAX (rm) into RBX (r)? (aka saves arrady address to rbx)
 		ie.ixExpr.visit(this, o);
 //		_asm.add( new Mov_rmr(new R(Reg64.RAX, Reg64.RCX) ) );
@@ -526,7 +565,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 
 		// load address of array[index] -> lea rdx, [rbx + rcx*8]
 		_asm.add( new Lea( new R(Reg64.RBX, Reg64.RCX, 8, 0, Reg64.RDX) ) );
-		// store expr (rax) at that address -> mov [rdx] rax
+		// store expr (rax) at that address -> mov rax, [rdx]
 		_asm.add( new Mov_rrm( new R(Reg64.RDX, Reg64.RAX) ) );
 		_asm.add( new Push(Reg64.RAX) );
 		return null;
@@ -657,8 +696,6 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				_asm.add( new Lea( new R(Reg64.RBP, vd.offset, Reg64.RAX) ) ); // lea rax, [rbp + vd.offset]
 			} else {
 				_asm.add( new Mov_rrm( new R(Reg64.RBP, vd.offset, Reg64.RAX) ) ); // mov rax, [rbp + vd.offset]
-				_asm.outputFromMark();
-				_asm.markOutputStart();
 			}
 		}
 		_asm.add( new Push(Reg64.RAX) );
@@ -671,7 +708,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		_asm.add( new Pop(Reg64.RBX) ); // starting heap address in rbx
 //		_asm.add( new Mov_rrm( new R(Reg64.RAX, Reg64.RBX) ) ); // store object's address in rbx
 
-		qr.id.visit(this, o);
+//		qr.id.visit(this, o);
 		FieldDecl fd = (FieldDecl) qr.id.getDeclaration();
 
 		if (o instanceof Boolean) { // return memory
