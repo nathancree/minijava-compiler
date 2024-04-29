@@ -107,7 +107,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		- r15 points to very base of stack (rbp) where pointers to fields are stored
 		-
 		 */
-		_asm.add( new Mov_rmr( new R(Reg64.R15, Reg64.RBP) ) ); // move stack pointer at start of program into r15
+		_asm.add( new Mov_rmr( new R(Reg64.R15, Reg64.RBP) ) ); // move stack pointer at start of program into r15 (should this be Lea?)
 
 		for (ClassDecl c: prog.classDeclList){
 			c.visit(this, c);
@@ -141,9 +141,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	
 	private int makePrintln() {
 		int idxStart = _asm.add( new Mov_rmi( new R(Reg64.RAX,true),1) );
-
-		_asm.add( new Mov_rmi( new R(Reg64.RDI,true),1) ); // fd = 1 (stdout)
 		_asm.add( new Mov_rmr( new R(Reg64.RSI, Reg64.RSP) ) ); // rax = address of string
+		_asm.add( new Mov_rmi( new R(Reg64.RDI,true),1) ); // fd = 1 (stdout)
 		_asm.add( new Mov_rmi( new R(Reg64.RDX,true),1) ); // length of str = 1
 		_asm.add( new Syscall() );
 		_asm.add( new Pop( Reg64.RAX) );
@@ -187,10 +186,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				} else {
 					_mainAddress = _asm.getSize();
 				}
-				m.visit(this, o);
-			} else {
-				m.visit(this, o);
 			}
+			m.visit(this, o);
 		}
 		return null;
 	}
@@ -308,6 +305,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		_asm.add( new Pop(Reg64.RBX) ); // rbx = val
 		_asm.add( new Pop(Reg64.RDI)); // destination address stored in rdi
 
+
 		if (stmt.ref instanceof IdRef) {
 			IdRef ref = (IdRef) stmt.ref;
 			if (ref.declaration instanceof VarDecl) { // if assigning to local var
@@ -410,7 +408,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	@Override
 	public Object visitIfStmt(IfStmt stmt, Object o){
     // should evaluate to be a literalExpression at heart (true = 1) (false = 0);
-    System.out.println("START IFSTMT");
+    System.out.println("START:   IF STMT");
 	_asm.markOutputStart();
 		stmt.cond.visit(this, o); // true or false result stored on stack
 		_asm.add( new Pop(Reg64.RAX) );
@@ -433,19 +431,20 @@ public class CodeGenerator implements Visitor<Object, Object> {
 			_asm.patch(jmpPastElse.listIdx, new Jmp(jmpPastElse.startAddress, _asm.getSize(), false));
 		}
 		_asm.outputFromMark();
-    System.out.println("END IFSTMT");
+    System.out.println("END:   IF STMT");
 		return null;
 	}
 	@Override
 	public Object visitWhileStmt(WhileStmt stmt, Object o){
     System.out.println("START:   WHILE LOOP");
 	_asm.markOutputStart();
-		int beforeLoopIdx = _asm.getSize(); // to jump back to
+		int beforeLoopIdx = _asm.getSize(); // idx to jump back to
 
 		stmt.cond.visit(this, o); // true (1) or false (0) stored on stack
 		_asm.add( new Pop(Reg64.RAX) );
 		_asm.add( new Cmp( new R(Reg64.RAX, true), 0) );
 		Instruction condJmp = new CondJmp(Condition.E, 0); // jump to end of while loop if the condition is false
+		_asm.add( condJmp);
 
 		stmt.body.visit(this, o);
 		_asm.add( new Jmp(_asm.getSize(), beforeLoopIdx, false) ); // jump to beginning of whileloop
@@ -470,9 +469,9 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		_asm.add( new Pop(Reg64.RAX) );
 
 		if (op.spelling.equals("!")) {
-			_asm.add( new Not( new R(Reg64.RAX, false) ) );
+			_asm.add( new Not( new R(Reg64.RAX, true) ) );
 		} else {
-			_asm.add( new Neg( new R(Reg64.RAX, false) ) );
+			_asm.add( new Neg( new R(Reg64.RAX, true) ) );
 		}
 		_asm.add( new Push(Reg64.RAX) );
 		return null;
