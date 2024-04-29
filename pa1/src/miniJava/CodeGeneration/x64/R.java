@@ -228,7 +228,7 @@ public class R /* Formally ModRMSIB */ {
 		}
 
 		int regByte = mod << 6 | getIdx(r) | 4;
-		int sibByte = ss << 6 | getIdx(ridx) | getIdx(rdisp);
+		int sibByte = ss << 6 | getIdx(ridx) << 3| getIdx(rdisp);
 
 		_b.write(regByte);
 		_b.write(sibByte);

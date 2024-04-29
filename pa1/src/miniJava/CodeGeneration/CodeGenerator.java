@@ -107,6 +107,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		- r15 points to very base of stack (rbp) where pointers to fields are stored
 		-
 		 */
+		// TODO: MOVE THIS TO MAIN
 		_asm.add( new Mov_rmr( new R(Reg64.R15, Reg64.RBP) ) ); // move stack pointer at start of program into r15 (should this be Lea?)
 
 		for (ClassDecl c: prog.classDeclList){
@@ -275,8 +276,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 //		stmt.varDecl.visit(this, o);
 		if (stmt.initExp != null) {
 			stmt.initExp.visit(this, o);
-			_asm.add( new Pop(Reg64.RAX) );
-//			_asm.add( new Pop(Reg64.RAX) ); // get stmt.initExp result from stack
+			_asm.add( new Pop(Reg64.RAX) ); // get stmt.initExp result from stack
 //			_asm.add( new Push(0) ); // all this does is basically update the rsp
 			_asm.add( new Mov_rmr( new R(Reg64.RBP, stmt.varDecl.offset, Reg64.RAX) ) ); // move stmt.initExp into local var [rbp - offset]
 		}
@@ -320,7 +320,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		} else if (stmt.ref instanceof QualRef) {	// if assigning to instance vars
 			QualRef ref = (QualRef) stmt.ref;
 			Declaration decl = ref.id.getDeclaration();
-			_asm.add( new Mov_rmr( new R(Reg64.RDI, Reg64.RBX) ) ); // offset accounted for already in visitQRef?
+			_asm.add( new Mov_rmr( new R(Reg64.RDI, 0, Reg64.RBX) ) ); // offset accounted for already in visitQRef?
 //			_asm.add( new Mov_rmr( new R(Reg64.RDI, ((FieldDecl)decl).offset, Reg64.RBX) ) );
 			return null;
 		} else {
@@ -677,7 +677,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				_asm.add( new Mov_rrm( new R(Reg64.RBP, 16, Reg64.RDI) ) ); // mov rdi, [rbp + 16]
 				_asm.add( new Lea( new R(Reg64.RDI, fd.offset, Reg64.RAX) ) ); // lea rax, [rdi + fd.offset]
 				if (!(o instanceof Boolean)) { // we do not want address
-					_asm.add( new Mov_rrm( new R(Reg64.RAX, Reg64.RAX) ) ); // mov rax, [rax]
+					_asm.add( new Mov_rrm( new R(Reg64.RAX, 0, Reg64.RAX) ) ); // mov rax, [rax]
 				}
 			}
 		} else if (ref.declaration instanceof VarDecl) { // var is local -> mov rax, [rbp + offset]
