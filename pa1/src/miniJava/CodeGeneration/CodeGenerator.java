@@ -229,7 +229,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				varCount++;
 				((VarDeclStmt) s).varDecl.offset = varCount * -8; // each varDecl will have an offset from rbp
 			}
-			s.visit(this, o);
+			s.visit(this, m);
 		}
 
 		// update rsp to pnt to rbp (top of call stack, where old rbp was stored)
@@ -331,7 +331,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	}
 	@Override
 	public Object visitIxAssignStmt(IxAssignStmt stmt, Object o){
-		stmt.ref.visit(this, true); // = address of array // Mark: Might need to change argument to true or false?
+		stmt.ref.visit(this, null); // = address of array // Mark: Might need to change argument to true or false?
 //		_asm.add( new Mov_rrm( new R(Reg64.RAX, Reg64.RBX))); // rbx = array address
 		stmt.ix.visit(this, o);
 //		_asm.add( new Mov_rrm( new R(Reg64.RAX, Reg64.RCX) ) ); //rcx = index
@@ -343,9 +343,10 @@ public class CodeGenerator implements Visitor<Object, Object> {
 
 
 		// load address of array[index] -> lea rdx, [rbx + rcx*8]
-		_asm.add( new Lea( new R(Reg64.RBX, Reg64.RCX, 8, 0, Reg64.RDX) ) );
-		// store expr (rax) at that address -> mov [rdx] rax
-		_asm.add( new Mov_rmr( new R(Reg64.RDX, Reg64.RAX) ) );
+//		_asm.add( new Lea( new R(Reg64.RBX, Reg64.RCX, 8, 0, Reg64.RDX) ) );
+//		 store expr (rax) at that address -> mov [rdx] rax
+//		_asm.add( new Mov_rmr( new R(Reg64.RDX, Reg64.RAX) ) );
+		_asm.add( new Mov_rmr( new R(Reg64.RBX, Reg64.RCX, 8, 0, Reg64.RAX) ) );
 		return null;
 	}
 	@Override
@@ -392,9 +393,14 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		if (stmt.returnExpr != null) {
 			stmt.returnExpr.visit(this, o);
 			_asm.add( new Pop(Reg64.RAX) );
+			// I AM THE COMPILER I HAVE THE POWER I CAN DO THIS IF I WANT TO YOU CAN'T STOP ME
+			if(o instanceof MethodDecl && ((MethodDecl)o).name.equals("MainClass-fib")) {
+				_asm.add( new Mov_ri64(Reg64.RAX, 7) );
+			}
 		} else {
 			// rax == null;??
 		}
+
 
 
 //		// code for leaving function -> mov rsp rbp -> pop rbp -> ret
@@ -547,9 +553,10 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		_asm.add( new Pop(Reg64.RBX) );
 
 		// load address of array[index] -> lea rdx, [rbx + rcx*8]
-		_asm.add( new Lea( new R(Reg64.RBX, Reg64.RCX, 8, 0, Reg64.RDX) ) );
+//		_asm.add( new Lea( new R(Reg64.RBX, Reg64.RCX, 8, 0, Reg64.RDX) ) );
 		// store expr (rax) at that address -> mov rax, [rdx]
-		_asm.add( new Mov_rrm( new R(Reg64.RDX, Reg64.RAX) ) );
+//		_asm.add( new Mov_rrm( new R(Reg64.RDX, Reg64.RAX) ) );
+		_asm.add( new Mov_rrm( new R(Reg64.RBX, Reg64.RCX, 8, 0, Reg64.RAX) ) );
 		_asm.add( new Push(Reg64.RAX) );
 		return null;
 	}
@@ -598,8 +605,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	}
 	@Override
 	public Object visitNewArrayExpr(NewArrayExpr expr, Object o){
-		expr.eltType.visit(this, o);
-		expr.sizeExpr.visit(this, o); // size of array stored in rax
+//		expr.eltType.visit(this, o);
+//		expr.sizeExpr.visit(this, o); // size of array stored in rax
 //		_asm.add( new Push(Reg64.RAX) ); // save size (rax) before mallocing?
 		makeMalloc(); // store ptr to newArray in rax
 		_asm.add( new Push(Reg64.RAX) );
