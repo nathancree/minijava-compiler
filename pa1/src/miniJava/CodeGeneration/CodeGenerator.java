@@ -571,8 +571,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		// store params in reverse order on stack
 //		expr.functionRef.visit(this, o);
 		for (int i = expr.argList.size() - 1; i >= 0; i--) {
-			expr.argList.get(i).visit(this, o); // result stored in rax
-			_asm.add( new Push(Reg64.RAX) );	// push param to the stack in reverse order
+			expr.argList.get(i).visit(this, o); // result stored on stack
+//			_asm.add( new Push(Reg64.RAX) );	// push param to the stack in reverse order
 		}
 
 		MethodDecl md;
@@ -683,7 +683,11 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		} else if (ref.declaration instanceof VarDecl) { // var is local -> mov rax, [rbp + offset]
 			VarDecl vd = (VarDecl) ref.declaration;
 			if (o instanceof Boolean) { // we want the address
-				_asm.add( new Lea( new R(Reg64.RBP, vd.offset, Reg64.RAX) ) ); // lea rax, [rbp + vd.offset]
+				if (ref.declaration.type.typeKind == TypeKind.CLASS) {
+					_asm.add( new Mov_rrm( new R(Reg64.RBP, vd.offset, Reg64.RAX) ) ); // mov rax, [rbp + vd.offset]
+        		} else {
+          			_asm.add(new Lea(new R(Reg64.RBP, vd.offset, Reg64.RAX))); // lea rax, [rbp + vd.offset]
+				}
 			} else {
 				_asm.add( new Mov_rrm( new R(Reg64.RBP, vd.offset, Reg64.RAX) ) ); // mov rax, [rbp + vd.offset]
 			}
